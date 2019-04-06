@@ -7,7 +7,6 @@ class Main extends Canvas{
 
       JFrame frame = new JFrame();
 
-
     }
 
 }
