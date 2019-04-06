@@ -12,6 +12,8 @@ public class Main{
 
       frame.setSize(size);
       frame.setLocation(0, 0);
+      frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+      frame.setUndecorated(true);
 
       Screen screen = new Screen();
 
