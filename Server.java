@@ -31,8 +31,8 @@ class VirtualServer extends Thread{
 	}
 	public String[] readMap () {
 		try {
-		//File file = new File("D:/github/shooter/maps/map1.txt");
-		File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
+		File file = new File("D:/github/shooter/maps/map1.txt");
+		//File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
 
 		FileInputStream fis = new FileInputStream(file);
 		byte[] data = new byte[(int) file.length()];
@@ -52,7 +52,7 @@ class VirtualServer extends Thread{
 		try {
 		while (clients.size() < 2)
 		 clients.add(new GameClientThread (ss.accept(), map));
-		 new Game(clients).beforeGame();
+		 new Game(clients).beforeGame(map);
 	 }
 	 catch (Exception e) {
 	 	System.out.println(e);
@@ -109,9 +109,6 @@ class GameClientThread extends Thread {
 			System.out.println(e);
 		}
 	}
-	public void update () {
-		System.out.println("Client update");
-	}
 }
 
 class WaitServer extends Thread{
@@ -146,8 +143,6 @@ class ConnectThread extends Thread{
 		try {
 		DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
 		DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
-		username = dis.readUTF();
-		System.out.println(username);
 		String answer = "";
 		answer += servers.length;
 		for (int i = 0; i < servers.length; i++) answer+=":"+servers[i].port;
@@ -185,18 +180,58 @@ class MainServer {
 
 class Game extends Thread{
 	ArrayList <GameClientThread> clients;
+	ArrayList <Gamer> gamers;
+	String[]map;
 	public Game (ArrayList <GameClientThread> clients) {
 		this.clients = clients;
 	}
-	public void beforeGame () {
+	public void beforeGame (String[]map) {
+		this.map = map;
 		System.out.println("Game is running");
+		createPlayers();
+		generatePlayersPositions();
 		start();
+	}
+	public void createPlayers () {
+		gamers = new ArrayList <Gamer>();
+		String team = "none";
+		for (int i = 0;i<gamers.size(); i++) {
+			gamers.add(new Gamer(clients.get(i), team));
+		}
+	}
+	public boolean allowablePosition(Position p) {
+		char c = map[p.x].charAt(p.y);
+		if (isValid(c)) return true;
+		else return false;
+	}
+	public boolean isValid (char c) {
+		ArrayList<Character> cl = new ArrayList<Character>();
+		cl.add('d');
+		for (int i=0; i<cl.size();i++) if (cl.get(i)==c) return false;
+
+		return true;
+	}
+	public Position randomPosition (int minX,int maxX,int minY,int maxY) {
+		int x = 0;
+		int y = 0;
+		Random r = new Random();
+		x = minX + r.nextInt(maxX - minX + 1);
+		y = minY + r.nextInt(maxY - minY + 1);
+		Position p = new Position(x,y);
+		if (allowablePosition(p)) return p;
+		else return randomPosition(minX,maxX,minY,maxY);
+	}
+	public void generatePlayersPositions() {
+		for (int i = 0;i<gamers.size(); i++) {
+			Position p = randomPosition(0,1000,0,1000);
+			gamers.get(i).setDefaultPosition(p);
+		}
 	}
 	public void run () {
 		try {
 			while (true) {
 				System.out.println("Update server");
-				for (int i = 0; i<clients.size();i++) clients.get(i).update();
+				for (int i = 0; i<clients.size();i++) gamers.get(i).update();
 				sleep(100);
 			}
 		}
@@ -205,25 +240,13 @@ class Game extends Thread{
 		}
 	}
 }
+
 class Position {
-	private int x;
-	private int y;
+	int x;
+	int y;
 	public Position (int x, int y) {
 		this.x = x;
 		this.y = y;
-	}
-	public void updatePosition (int x, int y) {
-		this.x = x;
-		this.y = y;
-	}
-	public Position getPosition () {
-		return this;
-	}
-	public int getX () {
-		return  x;
-	}
-	public int getY () {
-		return y;
 	}
 }
 
@@ -234,5 +257,12 @@ class Gamer {
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
+	}
+	public void setDefaultPosition (Position p) {
+		pos = p;
+		System.out.println("PlayerPosition " +p.x + " " + p.y);
+	}
+	public void update () {
+		System.out.println("Gamer update");
 	}
 }
