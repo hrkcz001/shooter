@@ -6,7 +6,7 @@ import javax.swing.*;
 
 class Client {
 
-	public static void main (String [] args) throws Exception {
+	public static void main (String [] args) throws Exception{
 
     Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -16,95 +16,80 @@ class Client {
 
 }
 
-class WaitServerConnecter {
-	DataInputStream dis;
-	DataOutputStream dos;
-  Scanner sc;
-	Socket s;
-	public WaitServerConnecter(String ip, int port) {
-		try {
-		sc = new Scanner(System.in);
+class WaitServerConnecter{
+
+	final DataInputStream dis;
+  final DataOutputStream dos;
+	final Socket s;
+
+	public WaitServerConnecter(String ip, int port) throws Exception{
+
 		s = new Socket (ip,port);
 		dis = new DataInputStream(s.getInputStream());
 		dos = new DataOutputStream(s.getOutputStream());
-	  }
-		catch (Exception e) {
-			System.out.println(e);
-		}
+
 	}
-	public String getServerList (String name) {
-		String req = name;
-		String res = "";
-	  try {
-			dos.writeUTF(req);
+
+	public String getServerList(){
+
+		String res;
+
+	  try{
+
 			res = dis.readUTF();
-			closeSocket();
-			return res;
+			s.close();
+			return(res);
+
 		}
-		catch (Exception e) {
-			System.out.println(e);
-			return "false";
+		catch(Exception e) {
+
+			return("false");
+
 		}
+
 	}
-	public void closeSocket () {
-		try {
-		sc.close();
-		s.close();
-		}
-		catch (Exception e) {
-			System.out.println(e);
-		}
-	}
+
 }
 
 class GameServerConnection {
-	DataInputStream dis;
-	DataOutputStream dos;
-  String map;
-	public GameServerConnection (String ip, int port) {
-		try {
+
+	final DataInputStream dis;
+	final DataOutputStream dos;
+  final String map;
+	String username = "PLAYER";
+
+	public GameServerConnection(String ip, int port) throws Exception{
+
 		Scanner sc = new Scanner(System.in);
 		Socket s = new Socket (ip,port);
 		dis = new DataInputStream(s.getInputStream());
 		dos = new DataOutputStream(s.getOutputStream());
-		}
-		catch (Exception e) {
-			System.out.println(e);
-		}
+
 	}
 
-	public void enterServer (String username) {
-		try {
+	public void enterServer() throws Exception {
+
 		dos.writeUTF(username);
 		String answ = dis.readUTF();
 		System.out.println(answ);
-		//дальнейшие действия
-		}
-	  catch (Exception e) {
-	  	System.out.println(e);
-	  }
+
+		//
+
 	}
 
-	public void downloadMap () {
-		try {
-			System.out.println("Downloading the Map");
-			//
+	public void downloadMap() throws Exception {
+
 			int length = Integer.parseInt(dis.readUTF());
 			System.out.println(length);
 			String[] map = new String[length];
 			for (int i = 0;i<length; i++) {
-				map[i] = dis.readUTF();
-				//System.out.println(map[i]);
-			}
-			//
-			System.out.println("Downloading of the Map is done");
-		}
-		catch (Exception e) {
-			System.out.println("Downloading of the Map failed");
-			System.out.println(e);
-		}
 
-	}
+				map[i] = dis.readUTF();
+
+			}
+
+ }
+
 }
 
 class Screen extends JPanel{
@@ -149,15 +134,20 @@ class MainPane extends JPanel{
     setLocation(0, 0);
     setBackground(Color.GREEN);
 
-    String answ = new WaitServerConnecter("localhost",6900).getServerList("Valera");
+    String answ = new WaitServerConnecter("25.68.140.53",6900).getServerList();
 		if(!answ.equals("false")){
 
-		    String[] server = answ.split(":");
+				String[] server = answ.split(":");
+
+				JTable table = new JTable(server);
+
+				table.setSize(size.height * 3 / 4, size.width);
+				table.setLocation(0, 0);
 
     }
     else{
 
-     JLabel refused = new JLabel("Не установлено соединение с сервером. \n Проверьте подключение к интернету и повторите попытку.");
+     JLabel refused = new JLabel("Не установлено соединение с сервером. Проверьте подключение к интернету и повторите попытку.");
      refused.setFont(new Font("Arial", Font.BOLD, size.height / 50));
      refused.setForeground(Color.RED);
      refused.setLocation(size.width / 3, size.height / 2);
