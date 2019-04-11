@@ -124,6 +124,7 @@ class Wind extends JFrame{
 
     super("Shooter");
     setExtendedState(JFrame.MAXIMIZED_BOTH);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setUndecorated(true);
     setResizable(false);
     setLayout(null);
@@ -148,8 +149,8 @@ class MainPane extends JPanel{
     setLocation(0, 0);
     setBackground(Color.GREEN);
 
-    String answ = new WaitServerConnecter("192.168.4.115",6900).getServerList("Valera");
-		if(answ.equals("false"){
+    String answ = new WaitServerConnecter("localhost",6900).getServerList("Valera");
+		if(!answ.equals("false")){
 
 		    String[] server = answ.split(":");
 
