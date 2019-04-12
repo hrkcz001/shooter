@@ -109,6 +109,17 @@ class GameClientThread extends Thread {
 			System.out.println(e);
 		}
 	}
+	public void sendFile (File f) {
+		System.out.println("Start of sending file");
+		byte [] mybytearray  = new byte [(int)f.length()];
+		try {
+			dos.write(mybytearray,0,mybytearray.length);
+		}
+		catch (Exception e) {
+			System.out.println(e);
+		}
+		System.out.println("Done");
+	}
 }
 
 class WaitServer extends Thread{
@@ -192,6 +203,11 @@ class Game extends Thread{
 		createPlayers();
 		generatePlayersPositions();
 		start();
+		sendTestFile();
+	}
+	public void sendTestFile () {
+		//File f = new File("");
+		File f = new File("test.txt");
 	}
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
@@ -266,5 +282,8 @@ class Gamer {
 	}
 	public void update () {
 		//System.out.println("Gamer update");
+	}
+	public void sendFile (File f) {
+		clientThread.sendFile(f);
 	}
 }
