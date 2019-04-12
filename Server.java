@@ -63,13 +63,17 @@ class VirtualServer extends Thread{
 class GameClientThread extends Thread {
 	DataInputStream dis;
 	DataOutputStream dos;
+	OutputStream os;
 	String clientNickname;
+	Socket clientSocket;
 	String[] map;
 	public GameClientThread (Socket clientSocket, String[] m) {
 		try {
 			dis = new DataInputStream(clientSocket.getInputStream());
 			dos = new DataOutputStream(clientSocket.getOutputStream());
+			os = clientSocket.getOutputStream();
 			this.map = m;
+			this.clientSocket = clientSocket;
 		}
 		catch (Exception e) {
 			System.out.println(e);
@@ -111,9 +115,14 @@ class GameClientThread extends Thread {
 	}
 	public void sendFile (File f) {
 		System.out.println("Start of sending file");
-		byte [] mybytearray  = new byte [(int)f.length()];
 		try {
-			dos.write(mybytearray,0,mybytearray.length);
+
+			byte [] mybytearray  = new byte [(int)f.length()];
+			FileInputStream fis = new FileInputStream(f);
+			BufferedInputStream bis = new BufferedInputStream(fis);
+			bis.read(mybytearray,0,mybytearray.length);
+			dos.writeUTF("command");
+			os.write(mybytearray,0,mybytearray.length);
 		}
 		catch (Exception e) {
 			System.out.println(e);
@@ -207,9 +216,16 @@ class Game extends Thread{
 
 	}
 	public void sendTestFile () {
-		//File f = new File("");
-		File f = new File("test.txt");
-		//вызов отправки файла для каждого из игроков
+		try {
+			sleep(1000);
+		}
+		catch (Exception e) {
+
+		}
+		File f = new File("D:/github/shooter/test.txt");
+		for (int i=0;i<gamers.size();i++) {
+			gamers.get(i).sendFile(f);
+		}
 	}
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
