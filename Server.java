@@ -31,8 +31,8 @@ class VirtualServer extends Thread{
 	}
 	public String[] readMap () {
 		try {
-		//File file = new File("D:/github/shooter/maps/map1.txt");
-		File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
+		File file = new File("D:/github/shooter/maps/map1.txt");
+		//File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
 
 		FileInputStream fis = new FileInputStream(file);
 		byte[] data = new byte[(int) file.length()];
