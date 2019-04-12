@@ -202,12 +202,14 @@ class Game extends Thread{
 		System.out.println("Game is running");
 		createPlayers();
 		generatePlayersPositions();
-		start();
 		sendTestFile();
+		start();
+
 	}
 	public void sendTestFile () {
 		//File f = new File("");
 		File f = new File("test.txt");
+		//вызов отправки файла для каждого из игроков
 	}
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
