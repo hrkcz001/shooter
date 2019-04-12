@@ -9,12 +9,9 @@ class Client {
 		String answ = new WaitServerConnecter("localhost",6900).getServerList("Valera");
 		System.out.println(answ);
 		String[] servers = answ.split(":");
-<<<<<<< HEAD
-=======
 		for (int i = 0; i<servers.length;i++) {
 			servers[i] = servers[i].split("/")[0];
 		}
->>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 		System.out.println(servers[1]);
 		GameServerConnection gsc = new GameServerConnection("localhost",Integer.parseInt(servers[1]));
 		gsc.enterServer("Valera");
