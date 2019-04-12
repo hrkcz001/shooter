@@ -31,8 +31,8 @@ class VirtualServer extends Thread{
 	}
 	public String[] readMap () {
 		try {
-		File file = new File("D:/github/shooter/maps/map1.txt");
-		//File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
+		//File file = new File("D:/github/shooter/maps/map1.txt");
+		File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
 
 		FileInputStream fis = new FileInputStream(file);
 		byte[] data = new byte[(int) file.length()];
@@ -145,7 +145,8 @@ class ConnectThread extends Thread{
 		DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 		String answer = "";
 		answer += servers.length;
-		for (int i = 0; i < servers.length; i++) answer+=":"+servers[i].port;
+		//:port/name/col:
+		for (int i = 0; i < servers.length; i++) answer+=":"+servers[i].port+"/"+"name"+ "/" +"0";
     dos.writeUTF(answer);
 		System.out.println(answer);
 		}
@@ -195,9 +196,10 @@ class Game extends Thread{
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
 		String team = "none";
-		for (int i = 0;i<gamers.size(); i++) {
+		for (int i = 0;i<clients.size(); i++) {
 			gamers.add(new Gamer(clients.get(i), team));
 		}
+
 	}
 	public boolean allowablePosition(Position p) {
 		char c = map[p.x].charAt(p.y);
@@ -230,8 +232,8 @@ class Game extends Thread{
 	public void run () {
 		try {
 			while (true) {
-				System.out.println("Update server");
-				for (int i = 0; i<clients.size();i++) gamers.get(i).update();
+				//System.out.println("Update server");
+				for (int i = 0; i<gamers.size();i++) gamers.get(i).update();
 				sleep(100);
 			}
 		}
@@ -263,6 +265,6 @@ class Gamer {
 		System.out.println("PlayerPosition " +p.x + " " + p.y);
 	}
 	public void update () {
-		System.out.println("Gamer update");
+		//System.out.println("Gamer update");
 	}
 }
