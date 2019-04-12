@@ -31,8 +31,13 @@ class VirtualServer extends Thread{
 	}
 	public String[] readMap () {
 		try {
+<<<<<<< HEAD
 		File file = new File("D:/github/shooter/maps/map1.txt");
 		//File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
+=======
+		//File file = new File("D:/github/shooter/maps/map1.txt");
+		File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 
 		FileInputStream fis = new FileInputStream(file);
 		byte[] data = new byte[(int) file.length()];
@@ -109,6 +114,20 @@ class GameClientThread extends Thread {
 			System.out.println(e);
 		}
 	}
+<<<<<<< HEAD
+=======
+	public void sendFile (File f) {
+		System.out.println("Start of sending file");
+		byte [] mybytearray  = new byte [(int)f.length()];
+		try {
+			dos.write(mybytearray,0,mybytearray.length);
+		}
+		catch (Exception e) {
+			System.out.println(e);
+		}
+		System.out.println("Done");
+	}
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 }
 
 class WaitServer extends Thread{
@@ -145,7 +164,12 @@ class ConnectThread extends Thread{
 		DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 		String answer = "";
 		answer += servers.length;
+<<<<<<< HEAD
 		for (int i = 0; i < servers.length; i++) answer+=":"+servers[i].port;
+=======
+		//:port/name/col:
+		for (int i = 0; i < servers.length; i++) answer+=":"+servers[i].port+"/"+"name"+ "/" +"0";
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
     dos.writeUTF(answer);
 		System.out.println(answer);
 		}
@@ -190,14 +214,32 @@ class Game extends Thread{
 		System.out.println("Game is running");
 		createPlayers();
 		generatePlayersPositions();
+<<<<<<< HEAD
 		start();
+=======
+		sendTestFile();
+		start();
+
+	}
+	public void sendTestFile () {
+		//File f = new File("");
+		File f = new File("test.txt");
+		//вызов отправки файла для каждого из игроков
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 	}
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
 		String team = "none";
+<<<<<<< HEAD
 		for (int i = 0;i<gamers.size(); i++) {
 			gamers.add(new Gamer(clients.get(i), team));
 		}
+=======
+		for (int i = 0;i<clients.size(); i++) {
+			gamers.add(new Gamer(clients.get(i), team));
+		}
+
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 	}
 	public boolean allowablePosition(Position p) {
 		char c = map[p.x].charAt(p.y);
@@ -230,8 +272,13 @@ class Game extends Thread{
 	public void run () {
 		try {
 			while (true) {
+<<<<<<< HEAD
 				System.out.println("Update server");
 				for (int i = 0; i<clients.size();i++) gamers.get(i).update();
+=======
+				//System.out.println("Update server");
+				for (int i = 0; i<gamers.size();i++) gamers.get(i).update();
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 				sleep(100);
 			}
 		}
@@ -263,6 +310,13 @@ class Gamer {
 		System.out.println("PlayerPosition " +p.x + " " + p.y);
 	}
 	public void update () {
+<<<<<<< HEAD
 		System.out.println("Gamer update");
+=======
+		//System.out.println("Gamer update");
+	}
+	public void sendFile (File f) {
+		clientThread.sendFile(f);
+>>>>>>> 39cb47c1ad61c7996bae3293bec658f40234a529
 	}
 }
