@@ -101,9 +101,9 @@ class GameClientThread extends Thread {
 		try {
 			System.out.println("Sending the Map");
 			//
-			dos.writeUTF(Integer.toString(map.length));
+			sendString(Integer.toString(map.length));
 			for (int i = 0;i<map.length; i++) {
-				dos.writeUTF(map[i]);
+				sendString(map[i]);
 			}
 			//
 			System.out.println("Sending of the Map is done");
@@ -113,21 +113,22 @@ class GameClientThread extends Thread {
 			System.out.println(e);
 		}
 	}
-	public void sendFile (File f) {
-		System.out.println("Start of sending file");
+	public synchronized void sendString (String s) {
 		try {
-
-			byte [] mybytearray  = new byte [(int)f.length()];
-			FileInputStream fis = new FileInputStream(f);
-			BufferedInputStream bis = new BufferedInputStream(fis);
-			bis.read(mybytearray,0,mybytearray.length);
-			dos.writeUTF("command");
-			os.write(mybytearray,0,mybytearray.length);
+			dos.writeUTF(s);
+		}
+		catch (Exception e){
+			System.out.println(e);
+		}
+	}
+	public synchronized String readString () {
+		try {
+			return(dis.readUTF());
 		}
 		catch (Exception e) {
 			System.out.println(e);
+			return null;
 		}
-		System.out.println("Done");
 	}
 }
 
@@ -211,20 +212,22 @@ class Game extends Thread{
 		System.out.println("Game is running");
 		createPlayers();
 		generatePlayersPositions();
-		sendTestFile();
+		sendTestString();
 		start();
 
 	}
-	public void sendTestFile () {
-		try {
-			sleep(1000);
-		}
-		catch (Exception e) {
-
-		}
-		File f = new File("D:/github/shooter/test.txt");
-		for (int i=0;i<gamers.size();i++) {
-			gamers.get(i).sendFile(f);
+	public void sendTestString(){
+		String s;
+		long t1;
+		long t2;
+		long dt;
+		for (int i = 0;i<gamers.size();i++) {
+			t1 = new Date().getTime();
+			gamers.get(i).clientThread.sendString("test");
+			s = gamers.get(i).clientThread.readString();
+			t2 = new Date().getTime();
+			dt = t2 - t1;
+			System.out.println (gamers.get(i).nickname + " ping " + dt);
 		}
 	}
 	public void createPlayers () {
@@ -290,9 +293,12 @@ class Gamer {
 	Position pos;
 	GameClientThread clientThread;
 	String team;
+	String nickname;
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
+		this.nickname = nickname;
+		nickname = clientThread.clientNickname;
 	}
 	public void setDefaultPosition (Position p) {
 		pos = p;
@@ -300,8 +306,5 @@ class Gamer {
 	}
 	public void update () {
 		//System.out.println("Gamer update");
-	}
-	public void sendFile (File f) {
-		clientThread.sendFile(f);
 	}
 }

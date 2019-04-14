@@ -16,7 +16,7 @@ class Client {
 		GameServerConnection gsc = new GameServerConnection("localhost",Integer.parseInt(servers[1]));
 		gsc.enterServer("Valera");
 		gsc.downloadMap();
-		gsc.waitForTestFile();
+		gsc.getTestString();
 	}
 }
 
@@ -67,40 +67,29 @@ class GameServerConnection {
 	Socket s;
   String map;
 
-	public void waitForTestFile () {
+	public synchronized void sendString (String s) {
 		try {
-			System.out.println("Waiting for testFile command");
-			System.out.println(dis.readUTF());
-			getTestFile();
+			dos.writeUTF(s);
 		}
-		catch (Exception e) {
+		catch (Exception e){
 			System.out.println(e);
 		}
 	}
-
-	public void getTestFile() {
+	public synchronized String readString () {
 		try {
-			System.out.println("Starting of downloading the File");
-			File f = new File("D:/github/shooter/files/f.txt");
-			byte [] mybytearray  = new byte [100];
-			InputStream is = s.getInputStream();
-			FileOutputStream fos = new FileOutputStream(f);
-			BufferedOutputStream bos = new BufferedOutputStream(fos);
-			int bytesRead = is.read(mybytearray,0,mybytearray.length);
-			int current = 0;
+			return(dis.readUTF());
+		}
+		catch (Exception e) {
+			System.out.println(e);
+			return null;
+		}
+	}
 
-			current = bytesRead;
-
-      do {
-         bytesRead =
-            is.read(mybytearray, current, (mybytearray.length-current));
-         if(bytesRead >= 0) current += bytesRead;
-      } while(bytesRead > -1);
-
-      bos.write(mybytearray, 0 , current);
-      bos.flush();
-			System.out.println("Downloading of file is done");
-
+	public void getTestString() {
+		try {
+			String s = readString();
+			sendString(s);
+			System.out.println("Test String + '" + s + "'");
 		}
 		catch (Exception e) {
 			System.out.println(e);
