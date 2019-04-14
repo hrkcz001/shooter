@@ -15,10 +15,8 @@ class VirtualServer extends Thread{
 	ArrayList <GameClientThread> clients;
 	int port;
 	int id;
-	String[] map;
 	public VirtualServer (int id) {
 		this.id = id;
-		map = readMap();
 		clients = new ArrayList<GameClientThread>();
 		//количество игроков на сервере
 		try {
@@ -29,30 +27,12 @@ class VirtualServer extends Thread{
 			System.out.println(e);
 		}
 	}
-	public String[] readMap () {
-		try {
-		File file = new File("D:/github/shooter/maps/map1.txt");
-		//File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
-
-		FileInputStream fis = new FileInputStream(file);
-		byte[] data = new byte[(int) file.length()];
-		fis.read(data);
-		fis.close();
-		String str = new String(data, "UTF-8");
-		String[] map = str.split(":");
-		return map;
-		}
-	  catch (Exception e) {
-	  	System.out.println(e);
-			return null;
-	  }
-	}
 	public void run () {
 		System.out.println(port);
 		try {
 		while (clients.size() < 2)
-		 clients.add(new GameClientThread (ss.accept(), map));
-		 new Game(clients).beforeGame(map);
+		 clients.add(new GameClientThread (ss.accept()));
+		 new Game(clients).beforeGame();
 	 }
 	 catch (Exception e) {
 	 	System.out.println(e);
@@ -66,13 +46,11 @@ class GameClientThread extends Thread {
 	OutputStream os;
 	String clientNickname;
 	Socket clientSocket;
-	String[] map;
-	public GameClientThread (Socket clientSocket, String[] m) {
+	public GameClientThread (Socket clientSocket) {
 		try {
 			dis = new DataInputStream(clientSocket.getInputStream());
 			dos = new DataOutputStream(clientSocket.getOutputStream());
 			os = clientSocket.getOutputStream();
-			this.map = m;
 			this.clientSocket = clientSocket;
 		}
 		catch (Exception e) {
@@ -83,7 +61,6 @@ class GameClientThread extends Thread {
 	public void run () {
 		System.out.println("GameClientThread started");
 		clientNickname = readClientNickname();
-		sendMap();
 	}
 	public String readClientNickname () {
 		try {
@@ -95,22 +72,6 @@ class GameClientThread extends Thread {
 		catch (Exception e){
 			System.out.println(e);
 			return null;
-		}
-	}
-	public void sendMap () {
-		try {
-			System.out.println("Sending the Map");
-			//
-			sendString(Integer.toString(map.length));
-			for (int i = 0;i<map.length; i++) {
-				sendString(map[i]);
-			}
-			//
-			System.out.println("Sending of the Map is done");
-		}
-		catch (Exception e) {
-			System.out.println("Sending of the Map failed");
-			System.out.println(e);
 		}
 	}
 	public synchronized void sendString (String s) {
@@ -207,11 +168,51 @@ class Game extends Thread{
 	public Game (ArrayList <GameClientThread> clients) {
 		this.clients = clients;
 	}
-	public void beforeGame (String[]map) {
-		this.map = map;
+	public void sendMap (GameClientThread gct) {
+		try {
+			System.out.println("Sending the Map");
+			//
+			gct.sendString(Integer.toString(map.length));
+			for (int i = 0;i<map.length; i++) {
+				gct.sendString(map[i]);
+			}
+			//
+			System.out.println("Sending of the Map is done");
+		}
+		catch (Exception e) {
+			System.out.println("Sending of the Map failed");
+			System.out.println(e);
+		}
+	}
+	public void sendMapToAll() {
+		for (int i = 0;i<gamers.size();i++) {
+			sendMap(gamers.get(i).clientThread);
+		}
+	}
+	public String[] readMap () {
+		try {
+		File file = new File("D:/github/shooter/maps/map1.txt");
+		//File file = new File("/home/10a/polyakov_om/github/shooter/maps/map1.txt");
+
+		FileInputStream fis = new FileInputStream(file);
+		byte[] data = new byte[(int) file.length()];
+		fis.read(data);
+		fis.close();
+		String str = new String(data, "UTF-8");
+		String[] map = str.split(":");
+		return map;
+		}
+		catch (Exception e) {
+			System.out.println(e);
+			return null;
+		}
+	}
+	public void beforeGame () {
+		map = readMap();
 		System.out.println("Game is running");
 		createPlayers();
 		generatePlayersPositions();
+		sendMapToAll();
 		sendTestString();
 		start();
 
