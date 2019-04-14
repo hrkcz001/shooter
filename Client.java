@@ -18,15 +18,27 @@ class Client {
 
 class WaitServerConnecter{
 
-	final DataInputStream dis;
-  final DataOutputStream dos;
-	final Socket s;
+	DataInputStream dis;
+  DataOutputStream dos;
+	Socket s;
 
-	public WaitServerConnecter(String ip, int port) throws Exception{
+	public Boolean setSocket(String ip, int port){
 
-		s = new Socket (ip,port);
-		dis = new DataInputStream(s.getInputStream());
-		dos = new DataOutputStream(s.getOutputStream());
+		try{
+
+			s = new Socket (ip,port);
+			dis = new DataInputStream(s.getInputStream());
+			dos = new DataOutputStream(s.getOutputStream());
+
+			return(true);
+
+		}
+		catch(Exception e){
+
+			System.out.println(e);
+			return(false);
+
+		}
 
 	}
 
@@ -43,6 +55,7 @@ class WaitServerConnecter{
 		}
 		catch(Exception e) {
 
+			System.out.println(e);
 			return("false");
 
 		}
@@ -53,9 +66,9 @@ class WaitServerConnecter{
 
 class GameServerConnection {
 
-	final DataInputStream dis;
-	final DataOutputStream dos;
-  final String map;
+	DataInputStream dis;
+  DataOutputStream dos;
+  String map;
 	String username = "PLAYER";
 
 	public GameServerConnection(String ip, int port) throws Exception{
@@ -121,6 +134,7 @@ class Wind extends JFrame{
     setVisible(true);
     main.setVisible(true);
 
+
   }
 
 }
@@ -133,16 +147,55 @@ class MainPane extends JPanel{
     setSize(size);
     setLocation(0, 0);
     setBackground(Color.GREEN);
+		setLayout(null);
 
-    String answ = new WaitServerConnecter("25.68.140.53",6900).getServerList();
-		if(!answ.equals("false")){
+		WaitServerConnecter wsc = new WaitServerConnecter();
+		Boolean connectionRes = wsc.setSocket("localhost",6900);
 
+		if(connectionRes){
+
+			  String answ = wsc.getServerList();
 				String[] server = answ.split(":");
+				String[] tableNames = {"Name", "Port", "Players"};
+				String[][] tableData = new String[server.length - 1][3];
 
-				JTable table = new JTable(server);
+				for(int i = 1; i < server.length; i++){
 
-				table.setSize(size.height * 3 / 4, size.width);
-				table.setLocation(0, 0);
+					tableData[i - 1] = server[i].split("/");
+
+				}
+
+				JTable table = new JTable(tableData, tableNames);
+
+				int height = (size.height * 3 / 4) / (server.length - 1);
+				if(height < 20){
+
+					height = 20;
+
+				}
+
+				JScrollPane  js = new JScrollPane(table);
+
+				for(int i = 0; i < tableData.length; i++){
+
+					JButton jb = new JButton("Connect");
+					jb.setLocation(size.width * 5 / 6 - 1, height * i + height / 4);
+					jb.setSize(size.width / 9, height);
+					add(jb);
+
+				}
+
+				table.setRowHeight(height);
+				table.setLocation(size.width / 6, size.height / 6);
+				table.setSize(size.width * 2 / 3, size.height * 3 / 4);
+				js.setLocation(size.width / 6, size.height / 6);
+				js.setSize(size.width * 2 / 3, size.height * 4 / 5);
+
+				table.getColumnModel().getColumn(0).setPreferredWidth(size.width / 3);
+				table.getColumnModel().getColumn(1).setPreferredWidth(size.width / 6);
+				table.getColumnModel().getColumn(2).setPreferredWidth(size.width / 6);
+
+				add(js);
 
     }
     else{
