@@ -308,3 +308,18 @@ class Gamer {
 		//System.out.println("Gamer update");
 	}
 }
+
+class Bullet {
+	int vx;
+	int vy;
+	Position p;
+	public Bullet (int vx, int vy, Position p) {
+		this.vx = vx;
+		this.vy = vy;
+		this.p = p;
+	}
+	public void update () {
+		p.x += vx;
+		p.y += vy;
+	}
+}
