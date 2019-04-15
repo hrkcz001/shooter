@@ -2,7 +2,9 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.table.*;
 
 class Client {
 
@@ -80,13 +82,12 @@ class GameServerConnection {
 
 	}
 
-	public void enterServer() throws Exception {
+	public void enterServer(String username) throws Exception {
 
+		this.username = username;
 		dos.writeUTF(username);
 		String answ = dis.readUTF();
 		System.out.println(answ);
-
-		//
 
 	}
 
@@ -98,6 +99,7 @@ class GameServerConnection {
 			for (int i = 0;i<length; i++) {
 
 				map[i] = dis.readUTF();
+				System.out.println(map[i]);
 
 			}
 
@@ -127,13 +129,11 @@ class Wind extends JFrame{
     setResizable(false);
     setLayout(null);
 
-    MainPane main = new MainPane(size);
+    MainPane main = new MainPane(this, size);
 
     add(main);
-
     setVisible(true);
     main.setVisible(true);
-
 
   }
 
@@ -141,7 +141,7 @@ class Wind extends JFrame{
 
 class MainPane extends JPanel{
 
-  public MainPane(Dimension size) throws Exception{
+  public MainPane(Wind wind, Dimension size) throws Exception{
 
     super();
     setSize(size);
@@ -154,6 +154,11 @@ class MainPane extends JPanel{
 
 		if(connectionRes){
 
+				JTextArea jta = new JTextArea("Player");
+				jta.setSize(size.width * 2 / 3, size.height / 40);
+				jta.setLocation(size.width / 6, size.height / 8);
+				add(jta);
+
 			  String answ = wsc.getServerList();
 				String[] server = answ.split(":");
 				String[] tableNames = {"Name", "Port", "Players"};
@@ -165,7 +170,36 @@ class MainPane extends JPanel{
 
 				}
 
-				JTable table = new JTable(tableData, tableNames);
+				TableModel tm = new DefaultTableModel(){
+  				public boolean isCellEditable(int rowIndex, int columnIndex){
+      			return(false);
+  				}
+					public Class<?> getColumnClass(int columnIndex) {
+    				return(String.class);
+					}
+					public int getColumnCount() {
+    				return(3);
+					}
+					public String getColumnName(int columnIndex) {
+    				switch (columnIndex) {
+        			case 0:
+            			return "Name";
+        			case 1:
+            			return "Port";
+        			case 2:
+            			return "Players";
+        		}
+    				return "";
+					}
+					public int getRowCount() {
+    				return(tableData.length);
+					}
+					public Object getValueAt(int rowIndex, int columnIndex){
+						return(tableData[rowIndex][columnIndex]);
+					}
+				};
+
+				JTable table = new JTable(tm);
 
 				int height = (size.height * 3 / 4) / (server.length - 1);
 				if(height < 20){
@@ -179,8 +213,23 @@ class MainPane extends JPanel{
 				for(int i = 0; i < tableData.length; i++){
 
 					JButton jb = new JButton("Connect");
-					jb.setLocation(size.width * 5 / 6 - 1, height * i + height / 4);
+					jb.setLocation(size.width * 5 / 6 - 1, height * i + (height / 4 + size.height / 600)*(tableData.length));
 					jb.setSize(size.width / 9, height);
+					final int tmp = i;
+					jb.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent ae){
+
+							try{
+								setVisible(false);
+								new ServerConnectionThread(Integer.parseInt(tableData[tmp][1]), jta.getText());
+							}
+							catch(Exception e){
+								System.out.print(e);
+							}
+
+						}
+					});
+
 					add(jb);
 
 				}
@@ -203,12 +252,45 @@ class MainPane extends JPanel{
      JLabel refused = new JLabel("Не установлено соединение с сервером. Проверьте подключение к интернету и повторите попытку.");
      refused.setFont(new Font("Arial", Font.BOLD, size.height / 50));
      refused.setForeground(Color.RED);
-     refused.setLocation(size.width / 3, size.height / 2);
+     refused.setLocation(size.width / 5, size.height / 2);
+		 refused.setSize(size.width, size.height / 50);
      add(refused);
 
     }
 
 
   }
+
+}
+
+class ServerConnectionThread extends Thread{
+
+	int port;
+	String username;
+
+	public ServerConnectionThread(int port, String username){
+
+		this.port = port;
+		this.username = username;
+		start();
+
+	}
+
+	public void run(){
+
+		try{
+
+			GameServerConnection gsc = new GameServerConnection("localhost", port);
+			gsc.enterServer(username);
+			gsc.downloadMap();
+
+		}
+		catch(Exception e){
+
+			System.out.print(e);
+
+		}
+
+	}
 
 }
