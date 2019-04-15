@@ -127,8 +127,9 @@ class ConnectThread extends Thread{
 		DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 		String answer = "";
 		answer += servers.length;
+		String name = "name";
 		//:port/name/col:
-		for (int i = 0; i < servers.length; i++) answer+=":"+servers[i].port+"/"+"name"+ "/" +"0";
+		for (int i = 0; i < servers.length; i++) answer+=":"+name+"/"+servers[i]+"/" +"0";
     dos.writeUTF(answer);
 		System.out.println(answer);
 		}
@@ -295,11 +296,13 @@ class Gamer {
 	GameClientThread clientThread;
 	String team;
 	String nickname;
+	int health;
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
 		this.nickname = nickname;
 		nickname = clientThread.clientNickname;
+		health = 100;
 	}
 	public void setDefaultPosition (Position p) {
 		pos = p;
@@ -308,19 +311,48 @@ class Gamer {
 	public void update () {
 		//System.out.println("Gamer update");
 	}
+	public void damage (int d) {
+		health -= d;
+	}
 }
 
 class Bullet {
 	int vx;
 	int vy;
+	int radius;
 	Position p;
-	public Bullet (int vx, int vy, Position p) {
+	String team;
+	int damage;
+	ArrayList <Gamer> gamers;
+	public Bullet (int vx,int vy,int radius,int damage,Position p,ArrayList<Gamer> gamers, String team) {
 		this.vx = vx;
 		this.vy = vy;
 		this.p = p;
+		this.gamers = gamers;
+		this.team = team;
+		this.damage = damage;
+		radius = 1;
 	}
-	public void update () {
+	public boolean update () {
+		moove();
+		return makeDamage(checkCollision());
+	}
+	public boolean makeDamage (Gamer g) {
+		if (g==null) return false;
+		//нанесение дамага
+		g.damage(damage);
+		return true;
+	}
+	public void moove () {
 		p.x += vx;
 		p.y += vy;
+	}
+	public Gamer checkCollision () {
+		for (int i = 0;i<gamers.size();i++) {
+			double s = Math.pow((gamers.get(i).pos.x - p.x),2) + Math.pow((gamers.get(i).pos.y - p.y),2);
+			if ((gamers.get(i).team == team)&&(Math.sqrt(s)<=radius))
+			 return gamers.get(i);
+		}
+		return null;
 	}
 }
