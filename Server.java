@@ -356,3 +356,9 @@ class Bullet {
 		return null;
 	}
 }
+
+class Barrier {
+	public Barrier () {
+		
+	}
+}
