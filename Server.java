@@ -165,9 +165,13 @@ class MainServer {
 class Game extends Thread{
 	ArrayList <GameClientThread> clients;
 	ArrayList <Gamer> gamers;
+	ArrayList <Barrier> barriers;
 	String[]map;
 	public Game (ArrayList <GameClientThread> clients) {
 		this.clients = clients;
+	}
+	public void setBarriers() {
+		barriers = new ArrayList<Barrier>();
 	}
 	public void sendMap (GameClientThread gct) {
 		try {
@@ -211,6 +215,7 @@ class Game extends Thread{
 	public void beforeGame () {
 		map = readMap();
 		System.out.println("Game is running");
+		setBarriers();
 		createPlayers();
 		generatePlayersPositions();
 		sendMapToAll();
@@ -324,13 +329,15 @@ class Bullet {
 	String team;
 	int damage;
 	ArrayList <Gamer> gamers;
-	public Bullet (int vx,int vy,int radius,int damage,Position p,ArrayList<Gamer> gamers, String team) {
+	ArrayList <Barrier> barriers;
+	public Bullet (int vx,int vy,int radius,int damage,Position p,ArrayList<Gamer> gamers, String team, ArrayList<Barrier>barriers) {
 		this.vx = vx;
 		this.vy = vy;
 		this.p = p;
 		this.gamers = gamers;
 		this.team = team;
 		this.damage = damage;
+		this.barriers = barriers;
 		radius = 1;
 	}
 	public boolean update () {
@@ -357,8 +364,50 @@ class Bullet {
 	}
 }
 
-class Barrier {
-	public Barrier () {
-		
+class BulletThread extends Thread{
+	ArrayList <Gamer> gamers;
+	ArrayList <Barrier> barriers;
+	ArrayList <Bullet> bullets;
+	int defRadius = 1;
+	int defDamage = 10;
+	public BulletThread (ArrayList <Gamer> gamers) {
+		this.gamers = gamers;
+		this.barriers = barriers;
+		bullets = new ArrayList<Bullet>();
+		addDefaultBullet(10,10,new Position(10,10),"red");
+		start();
 	}
+	public void run () {
+		//update and checking for delete every bullet
+	}
+	public void addDefaultBullet (int vx, int vy,Position p,String team) {
+		addBullet(vx,vy,defRadius,defDamage,p,gamers,team,barriers);
+	}
+	public void addBullet(int vx,int vy,int radius,int damage,Position p,ArrayList<Gamer> gamers, String team, ArrayList<Barrier>barriers){
+		bullets.add(new Bullet(vx,vy,radius,damage,p,gamers,team,barriers));
+	}
+}
+
+class Barrier {
+	int xFrom;
+	int yFrom;
+	int width;
+	int height;
+	public Barrier (int x, int y, int w, int h) {
+		xFrom = x;
+		yFrom = y;
+		width = w;
+		height = h;
+	}
+	public boolean checkCollision(int x, int y) {
+		if (xFrom > x) return false;
+		if ((xFrom + width) < x) return false;
+		if (yFrom > y) return false;
+		if ((yFrom + height) < y) return false;
+		return  true;
+	}
+	public void deleteBullet() {
+
+	}
+
 }
