@@ -70,7 +70,7 @@ class GameServerConnection {
 
 	DataInputStream dis;
   DataOutputStream dos;
-  String map;
+  String[] map;
 	String username = "PLAYER";
 
 	public GameServerConnection(String ip, int port) throws Exception{
@@ -95,11 +95,10 @@ class GameServerConnection {
 
 			int length = Integer.parseInt(dis.readUTF());
 			System.out.println(length);
-			String[] map = new String[length];
-			for (int i = 0;i<length; i++) {
+			map = new String[length];
+			for (int i = 0; i < length; i++) {
 
 				map[i] = dis.readUTF();
-				System.out.println(map[i]);
 
 			}
 
@@ -107,29 +106,72 @@ class GameServerConnection {
 
 }
 
-class Screen extends JPanel{
+class Screen extends JComponent{
 
-    public void paintComponent(Graphics g){
+	char[][] map;
+	Dimension size;
 
-      g.setColor(Color.ORANGE);
-      g.drawRect(0, 0, 200, 200);
+	public Screen(String[] stringMap, Dimension size){
 
-    }
+		map = new char[stringMap.length][];
+		for(int i = 0; i < stringMap.length; i++){
+			map[i] = stringMap[i].toCharArray();
+		}
+		this.size = size;
+
+	}
+
+  public void paintComponent(Graphics gr){
+
+		super.paintComponents(gr);
+		Graphics2D g =(Graphics2D)(gr);
+
+		for(int i = 0; i < map.length; i++)
+			for(int j = 0; j < map[i].length; j++){
+				switch(map[i][j]){
+					case 'f': g.setPaint(Color.GREEN);
+					          break;
+					case 'b': g.setPaint(Color.BLACK);
+										break;
+				}
+				g.fillRect(j*10 + size.width / 2 - map[0].length * 5, i*10 + size.height / 2 - map.length * 5, 10, 10);
+			}
+
+  }
 
 }
 
 class Wind extends JFrame{
 
+	final Dimension size;
+	Screen screen;
+
   public Wind(Dimension size) throws Exception{
 
     super("Shooter");
+		this.size = size;
     setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setUndecorated(true);
     setResizable(false);
-    setLayout(null);
 
     MainPane main = new MainPane(this, size);
+
+		main.addKeyListener(new KeyAdapter(){
+
+			public void keyRealesed(KeyEvent ke){
+
+				System.out.println(ke.getKeyCode());
+
+				if((screen != null) && ((ke.getKeyCode() == 77) || (ke.getKeyCode() == 109))){
+
+					screen.setVisible(false);
+
+				}
+
+			}
+
+		});
 
     add(main);
     setVisible(true);
@@ -139,7 +181,7 @@ class Wind extends JFrame{
 
 }
 
-class MainPane extends JPanel{
+class MainPane extends JLayeredPane{
 
 	Wind wind;
 	Dimension size;
@@ -152,19 +194,23 @@ class MainPane extends JPanel{
     super();
     setSize(size);
     setLocation(0, 0);
+		setOpaque(true);
     setBackground(new Color(100, 200, 100));
 		setLayout(null);
 		this.wind = wind;
 		this.size = size;
+		this.wind = wind;
 
 		createServerTable();
 
-		JButton startButton = new JButton("Start");
-		startButton.setLocation(0, 0);
-		startButton.setSize(100, 50);
-		startButton.addActionListener(new ActionListener(){
+		JLabel startButton = new JLabel("Find Server");
+		startButton.setLocation(size.width / 80, size.height / 2);
+		startButton.setFont(new Font("Arial", Font.BOLD, size.height / 36));
+		startButton.setForeground(new Color(200, 50, 200));
+		startButton.setSize(size.height / 5, size.height / 36);
+		startButton.addMouseListener(new MouseAdapter(){
 
-			public void actionPerformed(ActionEvent ae){
+			public void mouseClicked(MouseEvent ae){
 
 				startGamePanel.setLocation(size.width / 6, size.height / 10);
 				startGamePanel.setVisible(true);
@@ -172,8 +218,9 @@ class MainPane extends JPanel{
 			}
 
 		});
+		add(startButton, 2);
 
-		add(startButton);
+
 
   }
 
@@ -209,7 +256,7 @@ class MainPane extends JPanel{
 		JLabel close = new JLabel("close");
 		close.setForeground(new Color(150, 255, 150));
 		close.setLocation(size.width * 2 / 3 - size.width / 40, size.height / 640);
-		close.setSize(size.width / 20, size.height / 40);
+		close.setSize(size.height / 10, size.height / 40);
 		close.setFont(new Font("Arial", Font.BOLD, size.height / 60));
 		close.addMouseListener(new MouseAdapter(){
 
@@ -225,7 +272,7 @@ class MainPane extends JPanel{
 		JLabel reload = new JLabel("reload");
 		reload.setForeground(new Color(150, 255, 150));
 		reload.setLocation(size.width * 2 / 3 - size.width / 15, size.height / 640);
-		reload.setSize(size.width / 20, size.height / 40);
+		reload.setSize(size.height / 10, size.height / 40);
 		reload.setFont(new Font("Arial", Font.BOLD, size.height / 60));
 		reload.addMouseListener(new MouseAdapter(){
 
@@ -312,7 +359,7 @@ class MainPane extends JPanel{
 
 							try{
 								setVisible(false);
-								new ServerConnectionThread(Integer.parseInt(tableData[tmp][1]), jta.getText());
+								new ServerConnectionThread(Integer.parseInt(tableData[tmp][1]), jta.getText(), wind);
 							}
 							catch(Exception e){
 								System.out.print(e);
@@ -346,7 +393,7 @@ class MainPane extends JPanel{
 
 				startGamePanel.setVisible(false);
 
-				add(startGamePanel);
+				add(startGamePanel, 1);
 
     }
     else{
@@ -359,7 +406,7 @@ class MainPane extends JPanel{
      startGamePanel.add(refused);
 
 		 startGamePanel.setVisible(false);
-		 add(startGamePanel);
+		 add(startGamePanel, 1);
 
     }
 
@@ -371,11 +418,13 @@ class ServerConnectionThread extends Thread{
 
 	int port;
 	String username;
+	Wind wind;
 
-	public ServerConnectionThread(int port, String username){
+	public ServerConnectionThread(int port, String username, Wind wind){
 
 		this.port = port;
 		this.username = username;
+		this.wind = wind;
 		start();
 
 	}
@@ -387,6 +436,11 @@ class ServerConnectionThread extends Thread{
 			GameServerConnection gsc = new GameServerConnection("localhost", port);
 			gsc.enterServer(username);
 			gsc.downloadMap();
+
+			wind.screen = new Screen(gsc.map, wind.size);
+
+			wind.add(wind.screen);
+			wind.setVisible(true);
 
 		}
 		catch(Exception e){
