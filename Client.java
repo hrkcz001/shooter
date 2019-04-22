@@ -110,9 +110,12 @@ class Screen extends JComponent{
 
 	char[][] map;
 	Dimension size;
+	DataInputStream dis;
 
-	public Screen(String[] stringMap, Dimension size){
+	public Screen(GameServerConnection gsc, Dimension size){
 
+		dis = gsc.dis;
+		String[] stringMap = gsc.map;
 		map = new char[stringMap.length][];
 		for(int i = 0; i < stringMap.length; i++){
 			map[i] = stringMap[i].toCharArray();
@@ -126,7 +129,24 @@ class Screen extends JComponent{
 		super.paintComponents(gr);
 		Graphics2D g =(Graphics2D)(gr);
 
-		for(int i = 0; i < map.length; i++)
+		while(true){try{
+
+			String[] bulletString = dis.readUTF().split(":");
+
+			g.setPaint(Color.BLACK);
+			g.fillRect(0, 0, 1600, 900);
+
+			g.setPaint(Color.RED);
+
+			for(int i = 0; i < bulletString.length; i++){
+
+				g.fillRect(Integer.parseInt(bulletString[i].split("/")[0]), Integer.parseInt(bulletString[i].split("/")[1]), 0, 0);
+
+			}
+
+		}catch(Exception e){e.printStackTrace();}}
+
+		/*for(int i = 0; i < map.length; i++)
 			for(int j = 0; j < map[i].length; j++){
 				switch(map[i][j]){
 					case 'f': g.setPaint(Color.GREEN);
@@ -134,8 +154,8 @@ class Screen extends JComponent{
 					case 'b': g.setPaint(Color.BLACK);
 										break;
 				}
-				g.fillRect(j*10 + size.width / 2 - map[0].length * 5, i*10 + size.height / 2 - map.length * 5, 10, 10);
-			}
+				//g.fillRect(j*10 + size.width / 2 - map[0].length * 5, i*10 + size.height / 2 - map.length * 5, 10, 10);
+			}*/
 
   }
 
@@ -437,7 +457,7 @@ class ServerConnectionThread extends Thread{
 			gsc.enterServer(username);
 			gsc.downloadMap();
 
-			wind.screen = new Screen(gsc.map, wind.size);
+			wind.screen = new Screen(gsc , wind.size);
 
 			wind.add(wind.screen);
 			wind.setVisible(true);
