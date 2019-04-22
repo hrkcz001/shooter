@@ -129,7 +129,7 @@ class ConnectThread extends Thread{
 		answer += servers.length;
 		String name = "name";
 		//:port/name/col:
-		for (int i = 0; i < servers.length; i++) answer+=":"+name+"/"+servers[i]+"/" +"0";
+		for (int i = 0; i < servers.length; i++) answer+=":"+name+"/"+servers[i].port+"/" +"0";
     dos.writeUTF(answer);
 		System.out.println(answer);
 		}
@@ -315,6 +315,14 @@ class Gamer {
 	}
 	public void update () {
 		//System.out.println("Gamer update");
+	}
+	public void tryToMoove (int vx, int vy) {
+		//проверка на возможность продвижения
+		if (true) moove(vx,vy);
+	}
+	public void moove (int vx, int vy) {
+		pos.x+=vx;
+		pos.y+=vy;
 	}
 	public void damage (int d) {
 		health -= d;
