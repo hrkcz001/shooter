@@ -348,11 +348,16 @@ class Bullet {
 		if (g==null) return false;
 		//нанесение дамага
 		g.damage(damage);
+		stop();
 		return true;
 	}
 	public void moove () {
 		p.x += vx;
 		p.y += vy;
+	}
+	public void stop () {
+		vx = 0;
+		vy = 0;
 	}
 	public Gamer checkCollision () {
 		for (int i = 0;i<gamers.size();i++) {
@@ -374,11 +379,21 @@ class BulletThread extends Thread{
 		this.gamers = gamers;
 		this.barriers = barriers;
 		bullets = new ArrayList<Bullet>();
-		addDefaultBullet(10,10,new Position(10,10),"red");
+		//addDefaultBullet(10,10,new Position(10,10),"red");
 		start();
 	}
 	public void run () {
+		for (int i = 0;i<bullets.size();i++) {
+			if (bullets.get(i).update()) gamers.remove(i);
+			else if (checkBarrierCollision(gamers.get(i))) gamers.remove(i);
+		}
 		//update and checking for delete every bullet
+	}
+	public boolean checkBarrierCollision (Gamer g){
+		for (int i=0;i<barriers.size();i++) {
+			if (barriers.get(i).checkCollision(g.pos.x,g.pos.y)) return true;
+		}
+			return false;
 	}
 	public void addDefaultBullet (int vx, int vy,Position p,String team) {
 		addBullet(vx,vy,defRadius,defDamage,p,gamers,team,barriers);
@@ -406,8 +421,4 @@ class Barrier {
 		if ((yFrom + height) < y) return false;
 		return  true;
 	}
-	public void deleteBullet() {
-
-	}
-
 }
