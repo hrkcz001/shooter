@@ -7,7 +7,7 @@ import java.text.DecimalFormat;
 
 class Server {
 	public static void main(String[]args){
-		new ServerInfo("D:/shooter/serverinfo.txt");
+		new ServerInfo("/home/10a/polyakov_om/github/shooter-master/serverinfo.txt");
 		//ServerInfo.printAllData();
 		System.out.println(ServerInfo.getData(3));
 		new MainServer();

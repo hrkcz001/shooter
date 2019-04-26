@@ -161,7 +161,7 @@ class Screen extends JComponent{
 
 			if(!bulletString[0].isEmpty())
 			for(int i = 0; i < bulletString.length; i++){
-				
+
 				System.out.print(bulletString[i].split("/")[0] + ":" + bulletString[i].split("/")[1]);
 
 				g.fillRect((int)df.parse(bulletString[i].split("/")[0]).doubleValue(), (int)df.parse(bulletString[i].split("/")[1]).doubleValue(), 10, 10);
