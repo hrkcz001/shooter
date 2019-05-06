@@ -205,7 +205,8 @@ class Game extends Thread {
 	  System.out.println(ServerInfo.getData(3));
 
 		String s = "D:/shooter/maps/map2.txt";
-		if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");
+		/*if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");*/
+		s = "/home/10a/polyakov_om/github/shooter-master/maps/map2.txt";
 		File file = new File(s);
 
 		FileInputStream fis = new FileInputStream(file);
@@ -234,6 +235,8 @@ class Game extends Thread {
 		cameras = new ArrayList<Camera>();
 		cameras.add(new Camera(0,0,1600,900,bt,gamers));
 		cameras.get(0).addPlayer(0);
+		cameras.get(0).addPlayer(1);
+		gamers.get(0).pos = new DoublePosition(10,10);
 		//cameras.get(0).addPlayer(1);
 		bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
 		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");
@@ -301,6 +304,7 @@ class Game extends Thread {
 				gamers.get(cameras.get(i).gamersId.get(j)).sendString(cameras.get(i).forGamer);
 	}
 	public void run () {
+		new Updater(gamers, bt).start();
 		try {
 			while (true) {
 				//System.out.println("Update server");
@@ -332,12 +336,16 @@ class Gamer {
 	String team;
 	String nickname;
 	int health;
+	int v;
+	double rotation;
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
 		this.nickname = nickname;
 		nickname = clientThread.clientNickname;
 		health = 100;
+		v = 10;
+		rotation = 0;
 	}
 	public void setDefaultPosition (Position p) {
 		pos = p.toDoublePosition();
@@ -348,6 +356,11 @@ class Gamer {
 	}
 	public void sendString (String s) {
 		clientThread.sendString(s);
+	}
+	public void updatePosition (String a, String b) {
+		int vx = Integer.parseInt(a);
+		int vy = Integer.parseInt(b);
+		pos = new DoublePosition(pos.x + vx, pos.y + vy);
 	}
 }
 
@@ -572,5 +585,30 @@ class ServerInfo {
 	public static void printAllData () {
 		for (int i = 0;i<data.length;i++) System.out.print(getData(i) + " ");
 		System.out.println("");
+	}
+}
+
+class Updater extends Thread{
+	ArrayList <Gamer> gamers;
+	BulletThread bt;
+	public Updater (ArrayList <Gamer> gamers, BulletThread bt) {
+		this.gamers = gamers;
+		this.bt = bt;
+	}
+	public void run () {
+		try {
+			while (true) {
+				update();
+				sleep(10);
+			}
+		} catch(Exception e) {
+			System.out.println(e);
+		}
+	}
+	public void update () {
+		for (int i =0;i<gamers.size();i++){
+			String[] splitedData = gamers.get(i).clientThread.readString().split("/");
+			gamers.get(i).updatePosition(splitedData[0], splitedData[1]);
+		}
 	}
 }
