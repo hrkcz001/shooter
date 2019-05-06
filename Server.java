@@ -525,7 +525,7 @@ class Camera extends Thread{
 	public String gamersToString () {
 		String s = "";
 		for (int i = 0;i<gamersId.size();i++)
-			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + ":";
+			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + ":";
 		return s;
 	}
 	public String getForGamer() {
@@ -609,6 +609,7 @@ class Updater extends Thread{
 		for (int i =0;i<gamers.size();i++){
 			String[] splitedData = gamers.get(i).clientThread.readString().split("/");
 			gamers.get(i).updatePosition(splitedData[0], splitedData[1]);
+			gamers.get(i).rotation = DecimalFormat.getNumberInstance().parse(splitedData[3]).doubleValue();
 		}
 	}
 }
