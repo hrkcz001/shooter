@@ -204,7 +204,7 @@ class Game extends Thread {
 		try {
 	  System.out.println(ServerInfo.getData(3));
 
-		String s = "D:/shooterM/maps/map2.txt";
+		String s = "D:/github/shooterM/maps/map2.txt";
 		/*if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");*/
 		File file = new File(s);
 
