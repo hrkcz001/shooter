@@ -7,7 +7,7 @@ import java.text.DecimalFormat;
 
 class Server {
 	public static void main(String[]args){
-		new ServerInfo("/home/10a/polyakov_om/github/shooter-master/serverinfo.txt");
+		new ServerInfo("D:/github/shooterM/serverinfo.txt");
 		//ServerInfo.printAllData();
 		System.out.println(ServerInfo.getData(3));
 		new MainServer();
@@ -204,9 +204,8 @@ class Game extends Thread {
 		try {
 	  System.out.println(ServerInfo.getData(3));
 
-		String s = "D:/shooter/maps/map2.txt";
+		String s = "D:/shooterM/maps/map2.txt";
 		/*if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");*/
-		s = "/home/10a/polyakov_om/github/shooter-master/maps/map2.txt";
 		File file = new File(s);
 
 		FileInputStream fis = new FileInputStream(file);
@@ -606,10 +605,15 @@ class Updater extends Thread{
 		}
 	}
 	public void update () {
+		try {
 		for (int i =0;i<gamers.size();i++){
 			String[] splitedData = gamers.get(i).clientThread.readString().split("/");
 			gamers.get(i).updatePosition(splitedData[0], splitedData[1]);
 			gamers.get(i).rotation = DecimalFormat.getNumberInstance().parse(splitedData[3]).doubleValue();
 		}
+	}
+	catch (Exception e) {
+		e.printStackTrace();
+	}
 	}
 }

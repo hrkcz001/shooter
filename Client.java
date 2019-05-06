@@ -50,7 +50,6 @@ class WaitServerConnecter{
 		String res;
 
 	  try{
-
 			res = dis.readUTF();
 			s.close();
 			return(res);
