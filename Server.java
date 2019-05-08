@@ -258,9 +258,11 @@ class Game extends Thread {
 	}
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
-		String team = "none";
+		String[] teams = new String[2];
+		teams[0] = "red";
+		teams[1] = "green";
 		for (int i = 0;i<clients.size(); i++) {
-			gamers.add(new Gamer(clients.get(i), team));
+			gamers.add(new Gamer(clients.get(i), teams[i%2]));
 		}
 
 	}
