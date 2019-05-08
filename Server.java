@@ -234,8 +234,8 @@ class Game extends Thread {
 		cameras = new ArrayList<Camera>();
 		cameras.add(new Camera(0,0,1600,900,bt,gamers));
 		cameras.get(0).addPlayer(0);
-		cameras.get(0).addPlayer(1);
-		gamers.get(0).pos = new DoublePosition(10,10);
+		//cameras.get(0).addPlayer(1);
+		//gamers.get(0).pos = new DoublePosition(10,10);
 		//cameras.get(0).addPlayer(1);
 		bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
 		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");
@@ -343,7 +343,7 @@ class Gamer {
 		this.nickname = nickname;
 		nickname = clientThread.clientNickname;
 		health = 100;
-		v = 10;
+		v = 50;
 		rotation = 0;
 	}
 	public void setDefaultPosition (Position p) {
@@ -609,7 +609,7 @@ class Updater extends Thread{
 		for (int i =0;i<gamers.size();i++){
 			String[] splitedData = gamers.get(i).clientThread.readString().split("/");
 			gamers.get(i).updatePosition(splitedData[0], splitedData[1]);
-			gamers.get(i).rotation = DecimalFormat.getNumberInstance().parse(splitedData[3]).doubleValue();
+			gamers.get(i).rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
 		}
 	}
 	catch (Exception e) {
