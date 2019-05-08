@@ -28,7 +28,7 @@ class VirtualServer extends Thread{
 			ss = new ServerSocket(port);
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	public void run () {
@@ -39,7 +39,7 @@ class VirtualServer extends Thread{
 		 new Game(clients).beforeGame();
 	 }
 	 catch (Exception e) {
-	 	System.out.println(e);
+	 	e.printStackTrace();
 	 }
 	}
 }
@@ -58,7 +58,7 @@ class GameClientThread extends Thread {
 			this.clientSocket = clientSocket;
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 		start();
 	}
@@ -74,7 +74,7 @@ class GameClientThread extends Thread {
 			return name;
 		}
 		catch (Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -83,7 +83,7 @@ class GameClientThread extends Thread {
 			dos.writeUTF(s);
 		}
 		catch (Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	public synchronized String readString () {
@@ -91,7 +91,7 @@ class GameClientThread extends Thread {
 			return(dis.readUTF());
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -111,7 +111,7 @@ class WaitServer extends Thread{
 			 new ConnectThread (ss.accept(), servers).start();
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 }
@@ -138,7 +138,7 @@ class ConnectThread extends Thread{
 		System.out.println(answer);
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 
 	}
@@ -171,6 +171,7 @@ class Game extends Thread {
 	ArrayList <Gamer> gamers;
 	ArrayList <Barrier> barriers;
 	ArrayList <Camera> cameras;
+	ArrayList <Weapon> weapons;
 	BulletThread bt;
 	String[]map;
 	public Game (ArrayList <GameClientThread> clients) {
@@ -192,7 +193,7 @@ class Game extends Thread {
 		}
 		catch (Exception e) {
 			System.out.println("Sending of the Map failed");
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	public void sendMapToAll() {
@@ -217,7 +218,7 @@ class Game extends Thread {
 		return map;
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -226,6 +227,7 @@ class Game extends Thread {
 		System.out.println("Game is running");
 		setBarriers();
 		createPlayers();
+		createWeapons();
 		generatePlayersPositions();
 		sendMapToAll();
 		sendTestString();
@@ -241,6 +243,10 @@ class Game extends Thread {
 		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");
 		//in the end
 		start();
+	}
+	public void createWeapons () {
+		weapons = new ArrayList<Weapon>();
+		weapons.add(new Weapon("gun",1,500,20));
 	}
 	public void sendTestString(){
 		String s;
@@ -310,12 +316,17 @@ class Game extends Thread {
 			while (true) {
 				//System.out.println("Update server");
 				cameraUpdate();
+				gamersDtUpdate();
 				sleep(10);
 			}
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
+	}
+	public void gamersDtUpdate() {
+		for (int i = 0;i<gamers.size();i++)
+		  gamers.get(i).dt += weapons.get(gamers.get(i).weaponId).dt;
 	}
 }
 
@@ -339,6 +350,8 @@ class Gamer {
 	int health;
 	int v;
 	double rotation;
+	int dt;
+	int weaponId;
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
@@ -347,6 +360,8 @@ class Gamer {
 		health = 100;
 		v = 50;
 		rotation = 0;
+		dt = 0;
+		weaponId = 0;
 	}
 	public void setDefaultPosition (Position p) {
 		pos = p.toDoublePosition();
@@ -434,7 +449,7 @@ class BulletThread extends Thread{
 			}
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	public void update () {
@@ -540,7 +555,7 @@ class Camera extends Thread{
 		}
 		}
 	catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 }
@@ -575,7 +590,7 @@ class ServerInfo {
 		return str;
 		}
 		catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 			return null;
 		}
 
@@ -603,19 +618,35 @@ class Updater extends Thread{
 				sleep(10);
 			}
 		} catch(Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 	public void update () {
 		try {
+			Gamer g;
 		for (int i =0;i<gamers.size();i++){
-			String[] splitedData = gamers.get(i).clientThread.readString().split("/");
-			gamers.get(i).updatePosition(splitedData[0], splitedData[1]);
-			gamers.get(i).rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
+			g = gamers.get(i);
+			String[] splitedData = g.clientThread.readString().split("/");
+			g.updatePosition(splitedData[0], splitedData[1]);
+			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
+			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt == 0))
+				bt.addDefaultBullet(23,23,g.pos,g.team);
 		}
 	}
 	catch (Exception e) {
 		e.printStackTrace();
 	}
+	}
+}
+class Weapon {
+	int radius;
+	String name;
+	int dt;
+	int damage;
+	public Weapon (String name,int radius, int dt, int damage) {
+		this.radius = radius;
+		this.dt = dt;
+		this.damage = damage;
+		this.name = name;
 	}
 }
