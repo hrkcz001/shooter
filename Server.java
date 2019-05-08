@@ -2,14 +2,12 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.text.DecimalFormat;
-/*import java.nio.*;*/
 
 
 class Server {
 	public static void main(String[]args){
 		new ServerInfo("D:/github/shooterM/serverinfo.txt");
 		//ServerInfo.printAllData();
-		System.out.println(ServerInfo.getData(3));
 		new MainServer();
 	}
 }
@@ -226,12 +224,15 @@ class Game extends Thread {
 		map = readMap();
 		System.out.println("Game is running");
 		setBarriers();
+		System.out.println("1");
 		createPlayers();
+		System.out.println("2");
 		createWeapons();
 		generatePlayersPositions();
 		sendMapToAll();
 		sendTestString();
 		bt = new BulletThread(gamers, barriers);
+
 		barriers = new ArrayList <Barrier>();
 		cameras = new ArrayList<Camera>();
 		cameras.add(new Camera(0,0,1600,900,bt,gamers));
@@ -265,12 +266,12 @@ class Game extends Thread {
 	public void createPlayers () {
 		gamers = new ArrayList <Gamer>();
 		String[] teams = new String[2];
-		teams[0] = "red";
-		teams[1] = "green";
+		teams[0] = "1";
+		teams[1] = "-1";
 		for (int i = 0;i<clients.size(); i++) {
 			gamers.add(new Gamer(clients.get(i), teams[i%2]));
+			gamers.get(i).nickname = clients.get(i).clientNickname;
 		}
-
 	}
 	public boolean allowablePosition(Position p) {
 		char c = map[p.x].charAt(p.y);
@@ -314,7 +315,6 @@ class Game extends Thread {
 		new Updater(gamers, bt).start();
 		try {
 			while (true) {
-				//System.out.println("Update server");
 				cameraUpdate();
 				gamersDtUpdate();
 				sleep(10);
@@ -355,8 +355,7 @@ class Gamer {
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
-		this.nickname = nickname;
-		nickname = clientThread.clientNickname;
+		this.nickname = clientThread.clientNickname;
 		health = 100;
 		v = 50;
 		rotation = 0;
@@ -370,7 +369,7 @@ class Gamer {
 	public void damage (int d) {
 		health -= d;
 	}
-	public void sendString (String s) {
+	public synchronized void sendString (String s) {
 		clientThread.sendString(s);
 	}
 	public void updatePosition (String a, String b) {
@@ -517,7 +516,7 @@ class Camera extends Thread{
 	}
 	public void addPlayer(int i) {
 		gamersId.add(i);
-		System.out.println("Gamer add");
+
 	}
 	public void deletePlayer (int i) {
 		gamersId.remove(i);
@@ -541,7 +540,7 @@ class Camera extends Thread{
 	public String gamersToString () {
 		String s = "";
 		for (int i = 0;i<gamersId.size();i++)
-			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + ":";
+			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + "/"+ Integer.parseInt(gamers.get(i).team) + ":";
 		return s;
 	}
 	public String getForGamer() {
@@ -600,7 +599,6 @@ class ServerInfo {
 	}
 	public static void printAllData () {
 		for (int i = 0;i<data.length;i++) System.out.print(getData(i) + " ");
-		System.out.println("");
 	}
 }
 
