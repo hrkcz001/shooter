@@ -164,7 +164,6 @@ class Screen extends JComponent{
 			g.fillRect(0, 0, size.width, size.height);
 
 			String dataForPaint = dis.readUTF();
-			//System.out.println(dataForPaint);
 
 			if(!dataForPaint.isEmpty()){
 
@@ -212,7 +211,6 @@ class Screen extends JComponent{
 						if((splitedData.length >= 3) && (i == myNum)){
 
 							myPos = new Point(playerX, playerY);
-							myPosBoolean = true;
 
 						}
 
@@ -222,6 +220,7 @@ class Screen extends JComponent{
 						g.fillOval((int)(playerX - 25 * kWidth), (int)(playerY - 25 * kHeight), (int)(50 * kWidth), (int)(50 * kHeight));
 						g.setColor(Color.WHITE);
 						g.drawLine(playerX, playerY, rotationX, rotationY);
+						g.setPaint(Color.BLUE);
 
 					}
 
@@ -301,6 +300,56 @@ class Wind extends JFrame{
 					}
 
 				}
+
+			}
+
+		});
+
+		addMouseListener(new MouseAdapter(){
+
+			public void mousePressed(MouseEvent me){
+
+				if(main.started){
+				if(me.getButton() == MouseEvent.BUTTON1){
+
+					main.sct.leftMouse = true;
+					System.out.println("Left Pressed");
+
+				}
+				else{
+
+					if(me.getButton() == MouseEvent.BUTTON3){
+
+						main.sct.rightMouse = true;
+						System.out.println("Right Pressed");
+
+					}
+
+				}
+			}
+
+			}
+
+			public void mouseReleased(MouseEvent me){
+
+				if(main.started){
+				if(me.getButton() == MouseEvent.BUTTON1){
+
+					main.sct.leftMouse = false;
+					System.out.println("Left Released");
+
+				}
+				else{
+
+					if(me.getButton() == MouseEvent.BUTTON3){
+
+						main.sct.rightMouse = false;
+						System.out.println("Right Released");
+
+					}
+
+				}
+			}
 
 			}
 
@@ -425,7 +474,7 @@ class MainPane extends JLayeredPane{
 		startGamePanel.add(reload);
 
 		WaitServerConnecter wsc = new WaitServerConnecter();
-		Boolean connectionRes = wsc.setSocket("localhost",6900);
+		Boolean connectionRes = wsc.setSocket("25.68.140.53",6900);
 
 		if(connectionRes){
 
@@ -557,7 +606,7 @@ class ServerConnectionThread extends Thread{
 	Wind wind;
 	Boolean started = true, startedScreen = false;
 	DataOutputStream dos;
-	Boolean w = false, a = false, s = false, d = false;
+	Boolean w = false, a = false, s = false, d = false, rightMouse = false, leftMouse = false;
 
 
 	public ServerConnectionThread(int port, String username, Wind wind){
@@ -573,7 +622,7 @@ class ServerConnectionThread extends Thread{
 
 		try{
 
-			GameServerConnection gsc = new GameServerConnection("localhost", port);
+			GameServerConnection gsc = new GameServerConnection("25.68.140.53", port);
 			gsc.enterServer(username);
 			gsc.downloadMap();
 
@@ -603,6 +652,7 @@ class ResponseThread extends Thread{
 	ServerConnectionThread sct;
 	String x = "0";
 	String y = "0";
+	String m1 = "0";
 
 	public ResponseThread(ServerConnectionThread sct){
 
@@ -650,9 +700,19 @@ class ResponseThread extends Thread{
 					}
 				}
 
+				if(sct.leftMouse){
+
+					m1 = "1";
+
+				}else{
+
+					m1 = "0";
+
+				}
+
 				double rotation = 0.0;
 
-				if((sct.startedScreen) && (sct.wind.screen.myPosBoolean)){
+				if((sct.startedScreen)){
 
 					Point mouse = MouseInfo.getPointerInfo().getLocation();
 
@@ -660,7 +720,7 @@ class ResponseThread extends Thread{
 
 				}
 
-				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + sct.wind.screen.df.format(rotation) + "/1");}
+				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + sct.wind.screen.df.format(rotation) + "/" + m1);}
 
 				Thread.sleep(10);
 

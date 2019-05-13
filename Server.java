@@ -318,18 +318,19 @@ class Game extends Thread {
 		}
 	}
 	public void cameraUpdate () {
-		 System.out.println(cameras.get(0).forGamer);
+		 //System.out.println(cameras.get(0).forGamer);
 		 String s = "";
 		 //проход по камерам, отправка пользователям координат
 		 for (int i = 0;i<cameras.size();i++)
 		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
 				s = cameras.get(i).forGamer + "&" + Integer.toString(i);
 				gamers.get(cameras.get(i).gamersId.get(j)).sendString(s);
-				System.out.println(s);
+
 			}
+			System.out.println(s);
 	}
 	public void run () {
-		new Updater(gamers, bt).start();
+		new Updater(gamers, bt, weapons).start();
 		try {
 			while (true) {
 				cameraUpdate();
@@ -343,7 +344,7 @@ class Game extends Thread {
 	}
 	public void gamersDtUpdate() {
 		for (int i = 0;i<gamers.size();i++)
-		  gamers.get(i).dt += weapons.get(gamers.get(i).weaponId).dt;
+		  if (gamers.get(i).dt > 0) gamers.get(i).dt -= 10;
 	}
 }
 
@@ -386,6 +387,7 @@ class Gamer {
 	}
 	public void damage (int d) {
 		health -= d;
+		System.out.println(d);
 		if (health <= 0) status = false;
 	}
 	public synchronized void sendString (String s) {
@@ -450,7 +452,7 @@ class BulletThread extends Thread{
 	ArrayList <Gamer> gamers;
 	ArrayList <Barrier> barriers;
 	ArrayList <Bullet> bullets;
-	int defRadius = 1;
+	int defRadius = 26;
 	int defDamage = 10;
 	public BulletThread (ArrayList <Gamer> gamers, ArrayList <Barrier> barriers) {
 		this.gamers = gamers;
@@ -627,10 +629,13 @@ class ServerInfo {
 
 class Updater extends Thread{
 	ArrayList <Gamer> gamers;
+	ArrayList <Weapon> weapons;
 	BulletThread bt;
-	public Updater (ArrayList <Gamer> gamers, BulletThread bt) {
+	int defBulletV = 11;
+	public Updater (ArrayList <Gamer> gamers, BulletThread bt, ArrayList<Weapon> weapons) {
 		this.gamers = gamers;
 		this.bt = bt;
+		this.weapons = weapons;
 	}
 	public void run () {
 		try {
@@ -645,15 +650,18 @@ class Updater extends Thread{
 	public void update () {
 		try {
 			Gamer g;
+			double angle = 0;
 		for (int i =0;i<gamers.size();i++){
 			g = gamers.get(i);
 			String[] splitedData = g.clientThread.readString().split("/");
 			g.updatePosition(splitedData[0], splitedData[1]);
 			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
-			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)) {
-				System.out.println("Bullet сасать");
-				bt.addDefaultBullet(23,23,g.pos,g.team);
-			}
+			/*if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)) {
+				//System.out.println("+Bullet");
+				g.dt = weapons.get(g.weaponId).dt;
+				angle = Math.PI/2 - g.rotation;
+				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 25*Math.cos(angle), g.pos.y + 25*Math.sin(angle)),g.team);
+			}*/
 		}
 	}
 	catch (Exception e) {
