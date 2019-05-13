@@ -382,7 +382,7 @@ class Gamer {
 	}
 	public void damage (int d) {
 		health -= d;
-		if (health < 0) status = false;
+		if (health <= 0) status = false;
 	}
 	public synchronized void sendString (String s) {
 		clientThread.sendString(s);
@@ -557,6 +557,7 @@ class Camera extends Thread{
 		for (int i = 0;i<gamersId.size();i++) {
 			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + "/"+ Integer.parseInt(gamers.get(i).team);
 			s += "/" + (gamers.get(i).status ? 1 : 0);
+			s += "/" + gamers.get(i).health;
 			s+=":";
 		}
 		return s;
