@@ -38,7 +38,7 @@ class WaitServerConnecter{
 		}
 		catch(Exception e){
 
-			System.out.println(e);
+			e.printStackTrace();
 			return(false);
 
 		}
@@ -50,6 +50,7 @@ class WaitServerConnecter{
 		String res;
 
 	  try{
+
 			res = dis.readUTF();
 			s.close();
 			return(res);
@@ -57,7 +58,7 @@ class WaitServerConnecter{
 		}
 		catch(Exception e) {
 
-			System.out.println(e);
+			e.printStackTrace();
 			return("false");
 
 		}
@@ -69,8 +70,8 @@ class WaitServerConnecter{
 class GameServerConnection {
 
 	DataInputStream dis;
-  DataOutputStream dos;
-  String[] map;
+    DataOutputStream dos;
+    String[] map;
 	String username = "PLAYER";
 
 	public GameServerConnection(String ip, int port) throws Exception{
@@ -87,14 +88,12 @@ class GameServerConnection {
 		this.username = username;
 		dos.writeUTF(username);
 		String answ = dis.readUTF();
-		System.out.println(answ);
 
 	}
 
 	public void downloadMap() throws Exception {
 
 			int length = Integer.parseInt(dis.readUTF());
-			System.out.println(length);
 			map = new String[length];
 			for (int i = 0; i < length; i++) {
 
@@ -111,10 +110,20 @@ class GameServerConnection {
 class Screen extends JComponent{
 
 	char[][] map;
+	Boolean mapOn = false;
 	Dimension size;
 	DataInputStream dis;
+	double kWidth;
+	double kHeight;
+	Point myPos = new Point(0, 0);
+	Boolean myPosBoolean = false;
+	int myNum;
 
-	public Screen(GameServerConnection gsc, Dimension size){
+  DecimalFormat df = new DecimalFormat("#.00");
+
+	String[] oldBulletString = {"-100,00/-100,00:"};
+
+	public Screen(GameServerConnection gsc, Dimension size, ServerConnectionThread sct){
 
 		dis = gsc.dis;
 		String[] stringMap = gsc.map;
@@ -123,8 +132,12 @@ class Screen extends JComponent{
 			map[i] = stringMap[i].toCharArray();
 		}
 		this.size = size;
+		kWidth = size.width / 1600.0;
+		kHeight = size.height / 900.0;
+		myPosBoolean = false;
+		sct.startedScreen = true;
 
-		javax.swing.Timer timer = new javax.swing.Timer(5, new ActionListener(){
+		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
 
 			public void actionPerformed(ActionEvent ae){
 
@@ -143,35 +156,85 @@ class Screen extends JComponent{
 		super.paintComponents(gr);
 		Graphics2D g =(Graphics2D)(gr);
 
-		DecimalFormat df = new DecimalFormat("#.00");
+		if(!mapOn){
 
 		try{
 
 			g.setPaint(Color.BLACK);
-			g.fillRect(0, 0, 1600, 900);
+			g.fillRect(0, 0, size.width, size.height);
 
-			System.out.println(dis.readUTF());
-			System.out.println(dis.readUTF());
-			System.out.println(dis.readUTF());
+			String dataForPaint = dis.readUTF();
+			System.out.println(dataForPaint);
 
-			String[] bulletString = dis.readUTF().split("&")[0].split(":");
+			if(!dataForPaint.isEmpty()){
 
-			g.setPaint(Color.RED);
 
-			if(!bulletString[0].isEmpty())
-			for(int i = 0; i < bulletString.length; i++){
+				String[] splitedData = dataForPaint.split("&");
 
-				System.out.print(bulletString[i].split("/")[0] + ":" + bulletString[i].split("/")[1]);
+				if(!splitedData[0].isEmpty()){
 
-				g.fillRect((int)df.parse(bulletString[i].split("/")[0]).doubleValue(), (int)df.parse(bulletString[i].split("/")[1]).doubleValue(), 10, 10);
+					g.setPaint(Color.RED);
+
+					for(int i = 0; i < oldBulletString.length; i++){
+
+						g.fillRect((int)(df.parse(oldBulletString[i].split("/")[0]).doubleValue() * kWidth), (int)(df.parse(oldBulletString[i].split("/")[1]).doubleValue() * kHeight), (int)(4 * kWidth), (int)(4 * kHeight));
+
+					}
+
+					String[] bulletString = splitedData[0].split(":");
+
+					oldBulletString = bulletString;
+
+					for(int i = 0; i < bulletString.length; i++){
+
+						g.fillRect((int)(df.parse(bulletString[i].split("/")[0]).doubleValue() * kWidth), (int)(df.parse(bulletString[i].split("/")[1]).doubleValue() * kHeight), (int)(3 * kWidth), (int)(3 * kHeight));
+
+					}
+
+				}
+
+				if(!splitedData[1].isEmpty()){
+
+					if(splitedData.length >= 3){
+						myNum = Integer.parseInt(splitedData[2]);
+					}
+
+					String[] playersString = splitedData[1].split(":");
+
+					g.setPaint(Color.BLUE);
+
+					for(int i = 0; i < playersString.length; i++){
+
+						int playerX = (int)(df.parse(playersString[i].split("/")[0]).doubleValue() * kWidth);
+						int playerY = (int)(df.parse(playersString[i].split("/")[1]).doubleValue() * kHeight);
+						double angle = Math.PI / 2 - df.parse(playersString[i].split("/")[2]).doubleValue();
+
+						if((splitedData.length >= 3) && (i == myNum)){
+
+							myPos = new Point(playerX, playerY);
+							myPosBoolean = true;
+
+						}
+
+						int rotationX = (int)(playerX + 25 * kWidth * Math.cos(angle));
+						int rotationY = (int)(playerY + 25 * kHeight * Math.sin(angle));
+
+						g.fillOval((int)(playerX - 25 * kWidth), (int)(playerY - 25 * kHeight), (int)(50 * kWidth), (int)(50 * kHeight));
+						g.setColor(Color.WHITE);
+						g.drawLine(playerX, playerY, rotationX, rotationY);
+
+					}
+
+
+				}
 
 			}
 
-			//repaint();
-
 		}catch(Exception e){e.printStackTrace();}
+	}
+	else{
 
-		/*for(int i = 0; i < map.length; i++)
+		for(int i = 0; i < map.length; i++)
 			for(int j = 0; j < map[i].length; j++){
 				switch(map[i][j]){
 					case 'f': g.setPaint(Color.GREEN);
@@ -179,8 +242,9 @@ class Screen extends JComponent{
 					case 'b': g.setPaint(Color.BLACK);
 										break;
 				}
-				//g.fillRect(j*10 + size.width / 2 - map[0].length * 5, i*10 + size.height / 2 - map.length * 5, 10, 10);
-			}*/
+				g.fillRect(j*5 + size.width / 2 - map[0].length * 5, i*5 + size.height / 2 - map.length * 5, 5, 5);
+			}
+		}
 
   }
 
@@ -202,15 +266,39 @@ class Wind extends JFrame{
 
     MainPane main = new MainPane(this, size);
 
-		main.addKeyListener(new KeyAdapter(){
+		addKeyListener(new KeyAdapter(){
 
-			public void keyRealesed(KeyEvent ke){
+			public void keyPressed(KeyEvent ke){
 
-				System.out.println(ke.getKeyCode());
+				if(main.started){
 
-				if((screen != null) && ((ke.getKeyCode() == 77) || (ke.getKeyCode() == 109))){
+					switch(ke.getKeyCode()){
 
-					screen.setVisible(false);
+						case 87: main.sct.w = true; break;
+						case 65: main.sct.a = true; break;
+						case 83: main.sct.s = true; break;
+						case 68: main.sct.d = true; break;
+						case 77: if(screen.mapOn){screen.mapOn = false;}
+										 else{screen.mapOn = true;} break;
+
+					}
+
+				}
+
+			}
+
+			public void keyReleased(KeyEvent ke){
+
+				if(main.started){
+
+					switch(ke.getKeyCode()){
+
+						case 87: main.sct.w = false; break;
+						case 65: main.sct.a = false; break;
+						case 83: main.sct.s = false; break;
+						case 68: main.sct.d = false; break;
+
+					}
 
 				}
 
@@ -233,6 +321,8 @@ class MainPane extends JLayeredPane{
 	int currentX;
 	int currentY;
 	JPanel startGamePanel;
+	ServerConnectionThread sct;
+	Boolean started = false;
 
   public MainPane(Wind wind, Dimension size) throws Exception{
 
@@ -404,10 +494,11 @@ class MainPane extends JLayeredPane{
 
 							try{
 								setVisible(false);
-								new ServerConnectionThread(Integer.parseInt(tableData[tmp][1]), jta.getText(), wind);
+								sct = new ServerConnectionThread(Integer.parseInt(tableData[tmp][1]), jta.getText(), wind);
+								started = true;
 							}
 							catch(Exception e){
-								System.out.print(e);
+								e.printStackTrace();
 							}
 
 						}
@@ -464,6 +555,10 @@ class ServerConnectionThread extends Thread{
 	int port;
 	String username;
 	Wind wind;
+	Boolean started = true, startedScreen = false;
+	DataOutputStream dos;
+	Boolean w = false, a = false, s = false, d = false;
+
 
 	public ServerConnectionThread(int port, String username, Wind wind){
 
@@ -482,17 +577,96 @@ class ServerConnectionThread extends Thread{
 			gsc.enterServer(username);
 			gsc.downloadMap();
 
-			wind.screen = new Screen(gsc , wind.size);
+			this.dos = gsc.dos;
+
+			new ResponseThread(this).start();
+
+			wind.screen = new Screen(gsc , wind.size, this);
 
 			wind.add(wind.screen);
 			wind.setVisible(true);
 
+
 		}
 		catch(Exception e){
 
-			System.out.print(e);
+			e.printStackTrace();
 
 		}
+
+	}
+
+}
+
+class ResponseThread extends Thread{
+
+	ServerConnectionThread sct;
+	String x = "0";
+	String y = "0";
+
+	public ResponseThread(ServerConnectionThread sct){
+
+		this.sct = sct;
+
+	}
+
+	public void run(){
+
+		try{
+
+			while(sct.started){
+
+				if(sct.w && sct.s){
+					y = "0";
+				}
+				else{
+					if(sct.w){
+						y = "-1";
+					}
+					else{
+						if(sct.s){
+							y = "1";
+						}
+						else{
+							y = "0";
+						}
+					}
+				}
+
+				if(sct.a && sct.d){
+					x = "0";
+				}
+				else{
+					if(sct.a){
+						x = "-1";
+					}
+					else{
+						if(sct.d){
+							x = "1";
+						}
+						else{
+							x = "0";
+						}
+					}
+				}
+
+				double rotation = 0.0;
+
+				if((sct.startedScreen) && (sct.wind.screen.myPosBoolean)){
+
+					Point mouse = MouseInfo.getPointerInfo().getLocation();
+
+					rotation = Math.atan2(mouse.x - sct.wind.screen.myPos.x, mouse.y - sct.wind.screen.myPos.y);
+
+				}
+
+				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + sct.wind.screen.df.format(rotation) + "/1");}
+
+				Thread.sleep(10);
+
+			}
+
+		}catch(Exception e){e.printStackTrace();}
 
 	}
 

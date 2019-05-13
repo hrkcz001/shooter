@@ -6,7 +6,7 @@ import java.text.DecimalFormat;
 
 class Server {
 	public static void main(String[]args){
-		new ServerInfo("/home/10a/polyakov_om/github/shooter-master/serverinfo.txt");
+		new ServerInfo("D:/github/shooterM/serverinfo.txt");
 		//ServerInfo.printAllData();
 		new MainServer();
 	}
@@ -17,8 +17,12 @@ class VirtualServer extends Thread{
 	ArrayList <GameClientThread> clients;
 	int port;
 	int id;
+	Game g;
+	String status = "waiting for players";
+	String name = "";
 	public VirtualServer (int id) {
 		this.id = id;
+		this.name = "Server " + (id + 1);
 		clients = new ArrayList<GameClientThread>();
 		//количество игроков на сервере
 		try {
@@ -34,7 +38,9 @@ class VirtualServer extends Thread{
 		try {
 		while (clients.size() < Integer.parseInt(ServerInfo.getData(2)))
 		 clients.add(new GameClientThread (ss.accept()));
-		 new Game(clients).beforeGame();
+		 g = new Game(clients);
+		 g.beforeGame();
+		 status = "in game";
 	 }
 	 catch (Exception e) {
 	 	e.printStackTrace();
@@ -129,9 +135,8 @@ class ConnectThread extends Thread{
 		DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 		String answer = "";
 		answer += servers.length;
-		String name = "name";
 		//:port/name/col:
-		for (int i = 0; i < servers.length; i++) answer+=":"+name+"/"+servers[i].port+"/" +"0";
+		for (int i = 0; i < servers.length; i++) answer+=":" + servers[i].name +"/"+servers[i].port+"/" +servers[i].status;
     dos.writeUTF(answer);
 		System.out.println(answer);
 		}
@@ -203,7 +208,7 @@ class Game extends Thread {
 		try {
 	  System.out.println(ServerInfo.getData(3));
 
-		String s = "/home/10a/polyakov_om/github/shooter-master/maps/map2.txt";
+		String s = "D:/github/shooterM/maps/map2.txt";
 		/*if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");*/
 		File file = new File(s);
 
@@ -640,6 +645,7 @@ class Updater extends Thread{
 	}
 	}
 }
+
 class Weapon {
 	int radius;
 	String name;
