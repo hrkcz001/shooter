@@ -34,7 +34,7 @@ class VirtualServer extends Thread{
 		}
 	}
 	public void run () {
-		//System.out.println(port);
+		System.out.println(port);
 		try {
 		while (clients.size() < Integer.parseInt(ServerInfo.getData(2)))
 		{
@@ -70,7 +70,7 @@ class GameClientThread extends Thread {
 		start();
 	}
 	public void run () {
-		//System.out.println("GameClientThread started");
+		System.out.println("GameClientThread started");
 		clientNickname = readClientNickname();
 	}
 	public String readClientNickname () {
@@ -108,12 +108,12 @@ class WaitServer extends Thread{
 	private VirtualServer [] servers;
 	public WaitServer (VirtualServer [] servers) {
 		this.servers = servers;
-		//System.out.println("WaitServer created");
+		System.out.println("WaitServer created");
 	}
 	public void run () {
 		try {
 			ServerSocket ss = new ServerSocket(6900);
-			//System.out.println("WaitServer started");
+			System.out.println("WaitServer started");
 			while (true)
 			 new ConnectThread (ss.accept(), servers).start();
 		}
@@ -130,7 +130,7 @@ class ConnectThread extends Thread{
 	public ConnectThread (Socket s, VirtualServer[] servers) {
 		this.clientSocket = s;
 		this.servers = servers;
-		//System.out.println("new ConnectThread");
+		System.out.println("new ConnectThread");
 	}
 	public void run () {
 		try {
@@ -141,7 +141,7 @@ class ConnectThread extends Thread{
 		//:port/name/col:
 		for (int i = 0; i < servers.length; i++) answer+=":" + servers[i].name +"/"+servers[i].port+"/" +servers[i].status;
     dos.writeUTF(answer);
-		//System.out.println(answer);
+		System.out.println(answer);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -203,6 +203,10 @@ class Game extends Thread {
 		}
 	}
 	public void sendMapToAll() {
+		try {
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		for (int i = 0;i<gamers.size();i++) {
 			sendMap(gamers.get(i).clientThread);
 		}
@@ -314,7 +318,7 @@ class Game extends Thread {
 		}
 	}
 	public void cameraUpdate () {
-		 //System.out.println(cameras.get(0).forGamer);
+		 System.out.println(cameras.get(0).forGamer);
 		 String s = "";
 		 //проход по камерам, отправка пользователям координат
 		 for (int i = 0;i<cameras.size();i++)
