@@ -34,7 +34,7 @@ class VirtualServer extends Thread{
 		}
 	}
 	public void run () {
-		System.out.println(port);
+		//System.out.println(port);
 		try {
 		while (clients.size() < Integer.parseInt(ServerInfo.getData(2)))
 		{
@@ -70,7 +70,7 @@ class GameClientThread extends Thread {
 		start();
 	}
 	public void run () {
-		System.out.println("GameClientThread started");
+		//System.out.println("GameClientThread started");
 		clientNickname = readClientNickname();
 	}
 	public String readClientNickname () {
@@ -108,12 +108,12 @@ class WaitServer extends Thread{
 	private VirtualServer [] servers;
 	public WaitServer (VirtualServer [] servers) {
 		this.servers = servers;
-		System.out.println("WaitServer created");
+		//System.out.println("WaitServer created");
 	}
 	public void run () {
 		try {
 			ServerSocket ss = new ServerSocket(6900);
-			System.out.println("WaitServer started");
+			//System.out.println("WaitServer started");
 			while (true)
 			 new ConnectThread (ss.accept(), servers).start();
 		}
@@ -130,7 +130,7 @@ class ConnectThread extends Thread{
 	public ConnectThread (Socket s, VirtualServer[] servers) {
 		this.clientSocket = s;
 		this.servers = servers;
-		System.out.println("new ConnectThread");
+		//System.out.println("new ConnectThread");
 	}
 	public void run () {
 		try {
@@ -141,7 +141,7 @@ class ConnectThread extends Thread{
 		//:port/name/col:
 		for (int i = 0; i < servers.length; i++) answer+=":" + servers[i].name +"/"+servers[i].port+"/" +servers[i].status;
     dos.writeUTF(answer);
-		System.out.println(answer);
+		//System.out.println(answer);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -382,7 +382,7 @@ class Gamer {
 	}
 	public void damage (int d) {
 		health -= d;
-		if (health < 0) status = false;
+		if (health <= 0) status = false;
 	}
 	public synchronized void sendString (String s) {
 		clientThread.sendString(s);
@@ -557,6 +557,7 @@ class Camera extends Thread{
 		for (int i = 0;i<gamersId.size();i++) {
 			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + "/"+ Integer.parseInt(gamers.get(i).team);
 			s += "/" + (gamers.get(i).status ? 1 : 0);
+			s += "/" + gamers.get(i).health;
 			s+=":";
 		}
 		return s;
@@ -645,8 +646,10 @@ class Updater extends Thread{
 			String[] splitedData = g.clientThread.readString().split("/");
 			g.updatePosition(splitedData[0], splitedData[1]);
 			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
-			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt == 0))
+			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)) {
+				System.out.println("Bullet сасать");
 				bt.addDefaultBullet(23,23,g.pos,g.team);
+			}
 		}
 	}
 	catch (Exception e) {

@@ -164,7 +164,7 @@ class Screen extends JComponent{
 			g.fillRect(0, 0, size.width, size.height);
 
 			String dataForPaint = dis.readUTF();
-			System.out.println(dataForPaint);
+			//System.out.println(dataForPaint);
 
 			if(!dataForPaint.isEmpty()){
 
