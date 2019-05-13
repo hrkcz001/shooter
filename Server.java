@@ -6,7 +6,7 @@ import java.text.DecimalFormat;
 
 class Server {
 	public static void main(String[]args){
-		new ServerInfo("D:/github/shooterM/serverinfo.txt");
+		new ServerInfo("/home/10a/polyakov_om/github/shooter-master/serverinfo.txt");
 		//ServerInfo.printAllData();
 		new MainServer();
 	}
@@ -203,7 +203,7 @@ class Game extends Thread {
 		try {
 	  System.out.println(ServerInfo.getData(3));
 
-		String s = "D:/github/shooterM/maps/map2.txt";
+		String s = "/home/10a/polyakov_om/github/shooter-master/maps/map2.txt";
 		/*if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");*/
 		File file = new File(s);
 
@@ -305,11 +305,15 @@ class Game extends Thread {
 		}
 	}
 	public void cameraUpdate () {
-		 System.out.println(cameras.get(0).forGamer);
+		 //System.out.println(cameras.get(0).forGamer);
+		 String s = "";
 		 //проход по камерам, отправка пользователям координат
 		 for (int i = 0;i<cameras.size();i++)
-		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++)
-				gamers.get(cameras.get(i).gamersId.get(j)).sendString(cameras.get(i).forGamer);
+		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
+				s = cameras.get(i).forGamer + "&" + Integer.toString(i);
+				gamers.get(cameras.get(i).gamersId.get(j)).sendString(s);
+				System.out.println(s);
+			}
 	}
 	public void run () {
 		new Updater(gamers, bt).start();
