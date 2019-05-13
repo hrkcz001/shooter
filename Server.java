@@ -37,10 +37,13 @@ class VirtualServer extends Thread{
 		System.out.println(port);
 		try {
 		while (clients.size() < Integer.parseInt(ServerInfo.getData(2)))
+		{
 		 clients.add(new GameClientThread (ss.accept()));
+		 status = "waiting for players, " + clients.size() + " of " + ServerInfo.getData(2);
+	 }
 		 g = new Game(clients);
 		 g.beforeGame();
-		 status = "in game";
+		 status = "in game, " + clients.size() + " player(s)";
 	 }
 	 catch (Exception e) {
 	 	e.printStackTrace();
@@ -241,7 +244,8 @@ class Game extends Thread {
 		barriers = new ArrayList <Barrier>();
 		cameras = new ArrayList<Camera>();
 		cameras.add(new Camera(0,0,1600,900,bt,gamers));
-		cameras.get(0).addPlayer(0);
+		for (int i = 0;i<gamers.size();i++)
+		 cameras.get(0).addPlayer(i);
 		//cameras.get(0).addPlayer(1);
 		//gamers.get(0).pos = new DoublePosition(10,10);
 		//cameras.get(0).addPlayer(1);
@@ -361,6 +365,7 @@ class Gamer {
 	double rotation;
 	int dt;
 	int weaponId;
+	boolean status = true;
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
@@ -377,6 +382,7 @@ class Gamer {
 	}
 	public void damage (int d) {
 		health -= d;
+		if (health < 0) status = false;
 	}
 	public synchronized void sendString (String s) {
 		clientThread.sendString(s);
@@ -548,8 +554,11 @@ class Camera extends Thread{
 	}
 	public String gamersToString () {
 		String s = "";
-		for (int i = 0;i<gamersId.size();i++)
-			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + "/"+ Integer.parseInt(gamers.get(i).team) + ":";
+		for (int i = 0;i<gamersId.size();i++) {
+			s += decimalFormat.format(gamers.get(gamersId.get(i)).pos.x - xFrom) + "/"+ decimalFormat.format(gamers.get(gamersId.get(i)).pos.y - yFrom) + "/" + decimalFormat.format(gamers.get(gamersId.get(i)).rotation) + "/"+ Integer.parseInt(gamers.get(i).team);
+			s += "/" + (gamers.get(i).status ? 1 : 0);
+			s+=":";
+		}
 		return s;
 	}
 	public String getForGamer() {
