@@ -323,7 +323,7 @@ class Game extends Thread {
 		 //проход по камерам, отправка пользователям координат
 		 for (int i = 0;i<cameras.size();i++)
 		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
-				s = cameras.get(i).forGamer + "&" + Integer.toString(i);
+				s = cameras.get(i).forGamer + "&" + Integer.toString(i) + "&" + cameras.get(i).cameraInfString;
 				gamers.get(cameras.get(i).gamersId.get(j)).sendString(s);
 
 			}
@@ -522,6 +522,7 @@ class Camera extends Thread{
 	int height;
 	String forGamer;
 	DecimalFormat decimalFormat;
+	String cameraInfString;
 	public Camera (int x,int y, int sizeX, int sizeY, BulletThread bt, ArrayList <Gamer> gamers) {
 		this.xFrom = x;
 		this.yFrom = y;
@@ -533,6 +534,7 @@ class Camera extends Thread{
 		decimalFormat = new DecimalFormat("#.00");
 		forGamer = "";
 		System.out.println("Camera created");
+		cameraInfString = x + "/" + y + "/" + (x + sizeX) + "/" + (y + sizeY);
 		start();
 	}
 	public void addPlayer(int i) {
