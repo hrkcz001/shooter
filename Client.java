@@ -207,7 +207,7 @@ class Screen extends JComponent{
 						int playerX = (int)(df.parse(playersString[i].split("/")[0]).doubleValue() * kWidth);
 						int playerY = (int)(df.parse(playersString[i].split("/")[1]).doubleValue() * kHeight);
 						double angle = Math.PI / 2 - df.parse(playersString[i].split("/")[2]).doubleValue();
-
+						System.out.println(Double.toString(angle));
 						if((splitedData.length >= 3) && (i == myNum)){
 
 							myPos = new Point(playerX, playerY);

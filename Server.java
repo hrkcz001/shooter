@@ -260,7 +260,7 @@ class Game extends Thread {
 	}
 	public void createWeapons () {
 		weapons = new ArrayList<Weapon>();
-		weapons.add(new Weapon("gun",1,500,20));
+		weapons.add(new Weapon("gun",1,100,20));
 	}
 	public void sendTestString(){
 		String s;
@@ -658,12 +658,13 @@ class Updater extends Thread{
 			String[] splitedData = g.clientThread.readString().split("/");
 			g.updatePosition(splitedData[0], splitedData[1]);
 			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
-			/*if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)) {
+			System.out.println(Integer.toString(i) + " " + splitedData[2]);
+			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)) {
 				//System.out.println("+Bullet");
 				g.dt = weapons.get(g.weaponId).dt;
 				angle = Math.PI/2 - g.rotation;
 				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 25*Math.cos(angle), g.pos.y + 25*Math.sin(angle)),g.team);
-			}*/
+			}
 		}
 	}
 	catch (Exception e) {
