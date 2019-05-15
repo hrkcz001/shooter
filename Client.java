@@ -200,14 +200,31 @@ class Screen extends JComponent{
 
 					String[] playersString = splitedData[1].split(":");
 
-					g.setPaint(Color.BLUE);
+					String myTeam = playersString[myNum].split("/")[3];
 
 					for(int i = 0; i < playersString.length; i++){
+
+						if(playersString[i].split("/")[3].equals(myTeam)){
+
+							g.setPaint(Color.BLUE);
+
+						}
+						else{
+
+							g.setPaint(Color.RED);
+
+						}
+
+						if(playersString[i].split("/")[4].equals("0")){
+
+							g.setPaint(Color.BLACK);
+
+						}
 
 						int playerX = (int)(df.parse(playersString[i].split("/")[0]).doubleValue() * kWidth);
 						int playerY = (int)(df.parse(playersString[i].split("/")[1]).doubleValue() * kHeight);
 						double angle = Math.PI / 2 - df.parse(playersString[i].split("/")[2]).doubleValue();
-						System.out.println(Double.toString(angle));
+
 						if((splitedData.length >= 3) && (i == myNum)){
 
 							myPos = new Point(playerX, playerY);
@@ -650,6 +667,7 @@ class ServerConnectionThread extends Thread{
 class ResponseThread extends Thread{
 
 	ServerConnectionThread sct;
+	DecimalFormat df = new DecimalFormat("#.00");
 	String x = "0";
 	String y = "0";
 	String m1 = "0";
@@ -710,19 +728,19 @@ class ResponseThread extends Thread{
 
 				}
 
-				double rotation = 0.0;
+				float rotation = 0.0f;
 
 				if((sct.startedScreen)){
 
 					Point mouse = MouseInfo.getPointerInfo().getLocation();
 
-					rotation = Math.atan2(mouse.x - sct.wind.screen.myPos.x, mouse.y - sct.wind.screen.myPos.y);
+					rotation = (float)(Math.atan2(mouse.x - sct.wind.screen.myPos.x, mouse.y - sct.wind.screen.myPos.y));
 
 				}
 
-				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + sct.wind.screen.df.format(rotation) + "/" + m1);}
+				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + df.format(rotation) + "/" + m1);}
 
-				Thread.sleep(10);
+				Thread.sleep(5);
 
 			}
 

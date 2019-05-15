@@ -236,9 +236,7 @@ class Game extends Thread {
 		map = readMap();
 		System.out.println("Game is running");
 		setBarriers();
-		System.out.println("1");
 		createPlayers();
-		System.out.println("2");
 		createWeapons();
 		generatePlayersPositions();
 		sendMapToAll();
@@ -323,11 +321,12 @@ class Game extends Thread {
 		 //проход по камерам, отправка пользователям координат
 		 for (int i = 0;i<cameras.size();i++)
 		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
-				s = cameras.get(i).forGamer + "&" + Integer.toString(i) + "&" + cameras.get(i).cameraInfString;
+				s = cameras.get(i).forGamer + "&" + Integer.toString(j) + "&" + cameras.get(i).cameraInfString;
 				gamers.get(cameras.get(i).gamersId.get(j)).sendString(s);
+				//System.out.println(Integer.parseInt(s.split("&")[2]) + " " + i);
 
 			}
-			System.out.println(s);
+			//System.out.println(s);
 	}
 	public void run () {
 		new Updater(gamers, bt, weapons).start();
@@ -335,7 +334,7 @@ class Game extends Thread {
 			while (true) {
 				cameraUpdate();
 				gamersDtUpdate();
-				sleep(10);
+				sleep(5);
 			}
 		}
 		catch (Exception e) {
@@ -376,7 +375,7 @@ class Gamer {
 		this.team = team;
 		this.nickname = clientThread.clientNickname;
 		health = 100;
-		v = 50;
+		v = 1;
 		rotation = 0;
 		dt = 0;
 		weaponId = 0;
@@ -394,9 +393,17 @@ class Gamer {
 		clientThread.sendString(s);
 	}
 	public void updatePosition (String a, String b) {
-		int vx = Integer.parseInt(a);
-		int vy = Integer.parseInt(b);
-		pos = new DoublePosition(pos.x + vx, pos.y + vy);
+		int vx = Integer.parseInt(a)*v;
+		int vy = Integer.parseInt(b)*v;
+		if (allowablePosition(vx,vy)) pos = new DoublePosition(pos.x + vx, pos.y + vy);
+	}
+	public boolean allowablePosition (int vx, int vy) {
+		if (pos.x + vx < 0) return true;
+		if (pos.x + vx > 1600) return true;
+		if (pos.y + vy < 0) return true;
+		if (pos.y + vy > 0) return  true;
+
+		return false;
 	}
 }
 
@@ -446,6 +453,13 @@ class Bullet {
 		}
 		return null;
 	}
+	public boolean outOfZone () {
+		if (p.x < 0) return true;
+		if (p.y < 0) return true;
+		if (p.x > 1600) return true;
+		if (p.y > 1600) return true;
+		return false;
+	}
 }
 
 class BulletThread extends Thread{
@@ -465,7 +479,7 @@ class BulletThread extends Thread{
 		try {
 			while (true) {
 				update();
-				sleep(10);
+				sleep(5);
 			}
 		}
 		catch (Exception e) {
@@ -474,7 +488,7 @@ class BulletThread extends Thread{
 	}
 	public void update () {
 		for (int i = 0;i<bullets.size();i++) {
-			if (bullets.get(i).update()) bullets.remove(i);
+			if ((bullets.get(i).update())||(bullets.get(i).outOfZone())) bullets.remove(i);
 			else if (checkBarrierCollision(bullets.get(i))) bullets.remove(i);
 		}
 	}
@@ -577,7 +591,7 @@ class Camera extends Thread{
 		try {
 		while (true) {
 			forGamer = getForGamer();
-			sleep(10);
+			sleep(2);
 		}
 		}
 	catch (Exception e) {
@@ -643,7 +657,7 @@ class Updater extends Thread{
 		try {
 			while (true) {
 				update();
-				sleep(10);
+				//sleep(10);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -653,13 +667,13 @@ class Updater extends Thread{
 		try {
 			Gamer g;
 			double angle = 0;
-		for (int i =0;i<gamers.size();i++){
+		for (int i = 0;i<gamers.size();i++){
 			g = gamers.get(i);
 			String[] splitedData = g.clientThread.readString().split("/");
 			g.updatePosition(splitedData[0], splitedData[1]);
 			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
-			System.out.println(Integer.toString(i) + " " + splitedData[2]);
-			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)) {
+			//System.out.println(Integer.toString(i) + " " + splitedData[1] + " " + splitedData[2]);
+			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)&&(g.status)) {
 				//System.out.println("+Bullet");
 				g.dt = weapons.get(g.weaponId).dt;
 				angle = Math.PI/2 - g.rotation;
