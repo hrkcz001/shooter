@@ -213,7 +213,7 @@ class Game extends Thread {
 	}
 	public String[] readMap () {
 		try {
-	  System.out.println(ServerInfo.getData(3));
+	  //System.out.println(ServerInfo.getData(3));
 
 		String s = "D:/github/shooterM/maps/map2.txt";
 		/*if (ServerInfo.getData(3).equals(s)) System.out.println("SOSAMBA");*/
@@ -334,7 +334,7 @@ class Game extends Thread {
 			while (true) {
 				cameraUpdate();
 				gamersDtUpdate();
-				sleep(5);
+				sleep(6);
 			}
 		}
 		catch (Exception e) {
@@ -365,7 +365,7 @@ class Gamer {
 	String team;
 	String nickname;
 	int health;
-	int v;
+	double v;
 	double rotation;
 	int dt;
 	int weaponId;
@@ -393,15 +393,15 @@ class Gamer {
 		clientThread.sendString(s);
 	}
 	public void updatePosition (String a, String b) {
-		int vx = Integer.parseInt(a)*v;
-		int vy = Integer.parseInt(b)*v;
+		double vx = Integer.parseInt(a)*v;
+		double vy = Integer.parseInt(b)*v;
 		if (allowablePosition(vx,vy)) pos = new DoublePosition(pos.x + vx, pos.y + vy);
 	}
-	public boolean allowablePosition (int vx, int vy) {
-		if (pos.x + vx < 0) return true;
-		if (pos.x + vx > 1600) return true;
-		if (pos.y + vy < 0) return true;
-		if (pos.y + vy > 0) return  true;
+	public boolean allowablePosition (double vx, double vy) {
+		if (pos.x + vx > 0) return true;
+		if (pos.x + vx < 1600) return true;
+		if (pos.y + vy > 0) return true;
+		if (pos.y + vy < 1600) return  true;
 
 		return false;
 	}
@@ -479,7 +479,7 @@ class BulletThread extends Thread{
 		try {
 			while (true) {
 				update();
-				sleep(5);
+				sleep(10);
 			}
 		}
 		catch (Exception e) {
@@ -591,7 +591,7 @@ class Camera extends Thread{
 		try {
 		while (true) {
 			forGamer = getForGamer();
-			sleep(2);
+			sleep(10);
 		}
 		}
 	catch (Exception e) {
@@ -657,7 +657,7 @@ class Updater extends Thread{
 		try {
 			while (true) {
 				update();
-				//sleep(10);
+				sleep(2);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -697,5 +697,12 @@ class Weapon {
 		this.dt = dt;
 		this.damage = damage;
 		this.name = name;
+	}
+}
+
+class GamerUpdater extends Thread {
+	Gamer g;
+	public GamerUpdater (Gamer g) {
+		this.g = g;
 	}
 }

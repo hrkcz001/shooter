@@ -164,6 +164,7 @@ class Screen extends JComponent{
 			g.fillRect(0, 0, size.width, size.height);
 
 			String dataForPaint = dis.readUTF();
+			System.out.println(dataForPaint);
 
 			if(!dataForPaint.isEmpty()){
 
@@ -235,6 +236,15 @@ class Screen extends JComponent{
 						int rotationY = (int)(playerY + 25 * kHeight * Math.sin(angle));
 
 						g.fillOval((int)(playerX - 25 * kWidth), (int)(playerY - 25 * kHeight), (int)(50 * kWidth), (int)(50 * kHeight));
+
+						/*if(i == myNum){
+
+							g.setPaint(Color.GREEN);
+
+						}
+
+						g.fillOval()*/
+
 						g.setColor(Color.WHITE);
 						g.drawLine(playerX, playerY, rotationX, rotationY);
 						g.setPaint(Color.BLUE);
@@ -740,7 +750,7 @@ class ResponseThread extends Thread{
 
 				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + df.format(rotation) + "/" + m1);}
 
-				Thread.sleep(5);
+				Thread.sleep(10);
 
 			}
 
