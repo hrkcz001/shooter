@@ -143,7 +143,7 @@ class Screen extends JComponent{
 		textures.load("textures.txt");
 		sct.startedScreen = true;
 
-		javax.swing.Timer timer = new javax.swing.Timer(10, new ActionListener(){
+		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
 
 			public void actionPerformed(ActionEvent ae){
 
