@@ -141,7 +141,7 @@ class Screen extends JComponent{
 		kHeight = size.height / 900.0;
 		textures = new Textures(kWidth, kHeight);
 		myPosBoolean = false;
-		textures.load("D:/shooter 0.3.x/textures.txt");
+		textures.load("D:/github/shooterFF/textures.txt");
 		sct.startedScreen = true;
 
 		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
@@ -162,6 +162,7 @@ class Screen extends JComponent{
 
 		super.paintComponents(gr);
 		Graphics2D g =(Graphics2D)(gr);
+		g.setFont(new Font("Impact", Font.BOLD, size.height / 10));
 
 		if(!mapOn){
 
@@ -190,8 +191,8 @@ class Screen extends JComponent{
 
 					Graphics2D g2d = ground.createGraphics();
 
-					for(int i = Integer.parseInt(splitedData[3].split("/")[0]); i < Integer.parseInt(splitedData[3].split("/")[2]) - 1; i++)
-						for(int j = Integer.parseInt(splitedData[3].split("/")[1]); j < Integer.parseInt(splitedData[3].split("/")[3]) - 1; j++){
+					for(int i = Integer.parseInt(splitedData[3].split("/")[0]); i < Integer.parseInt(splitedData[3].split("/")[2]); i++)
+						for(int j = Integer.parseInt(splitedData[3].split("/")[1]); j < Integer.parseInt(splitedData[3].split("/")[3]); j++){
 
 							switch(map[i][j]){
 
@@ -201,7 +202,7 @@ class Screen extends JComponent{
 
 							}
 
-						g2d.fillRect(i*10, j*10, 10, 10);
+						g2d.fillRect(i * (int)(10 * kWidth), j * (int)(10 * kHeight), (int)(10 * kWidth), (int)(10 * kHeight));
 
 					}
 
@@ -209,7 +210,7 @@ class Screen extends JComponent{
 
 				}
 
-				}					
+				}
 
 				if(!splitedData[0].isEmpty()){
 
@@ -247,6 +248,16 @@ class Screen extends JComponent{
 
 						String plTeam = "red";
 
+						int playerX = (int)(df.parse(playersString[i].split("/")[0]).doubleValue() * kWidth);
+						int playerY = (int)(df.parse(playersString[i].split("/")[1]).doubleValue() * kHeight);
+						double angle = Math.PI / 2 - df.parse(playersString[i].split("/")[2]).doubleValue();
+
+						if((splitedData.length >= 3) && (i == myNum)){
+
+							myPos = new Point(playerX, playerY);
+
+						}
+
 						if(playersString[i].split("/")[3].equals(myTeam)){
 
 							g.setPaint(Color.BLUE);
@@ -257,16 +268,6 @@ class Screen extends JComponent{
 
 							g.setPaint(Color.RED);
 							plTeam = "red";
-
-						}
-
-						int playerX = (int)(df.parse(playersString[i].split("/")[0]).doubleValue() * kWidth);
-						int playerY = (int)(df.parse(playersString[i].split("/")[1]).doubleValue() * kHeight);
-						double angle = Math.PI / 2 - df.parse(playersString[i].split("/")[2]).doubleValue();
-
-						if((splitedData.length >= 3) && (i == myNum)){
-
-							myPos = new Point(playerX, playerY);
 
 						}
 
@@ -293,14 +294,26 @@ class Screen extends JComponent{
 
 							g.fillOval((int)(playerX - 12 * kWidth), (int)(playerY - 12 * kHeight), (int)(25 * kWidth), (int)(25 * kHeight));
 
-							g.setPaint(Color.BLUE);
-
 						}
 						else{
 
 							BufferedImage dead = textures.find("dead_" + plTeam);
 							dead = textures.rotate(dead, - Math.PI / 2 + angle);
 							g.drawImage(dead, playerX - dead.getWidth() / 2, playerY - dead.getHeight() / 2, null);
+
+						}
+
+						if(i == myNum){
+
+								g.setPaint(Color.RED);
+
+								g.drawString("+ " + playersString[i].split("/")[5], size.width / 50, size.height - size.height / 10);
+
+								if(playersString[i].split("/")[4].equals("0")){
+
+									g.drawString("YOU DIED", size.width / 2 - size.width / 5, size.height / 2 - size.height / 10);
+
+								}
 
 						}
 
@@ -335,16 +348,26 @@ class Wind extends JFrame{
 
 	final Dimension size;
 	Screen screen;
+	JLabel loading;
 
   public Wind(Dimension size) throws Exception{
 
     super("Shooter");
-		this.size = size;
+	this.size = size;
     setExtendedState(JFrame.MAXIMIZED_BOTH);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setUndecorated(true);
     setResizable(false);
     getContentPane().setBackground(new Color(100, 200, 100));
+
+    loading = new JLabel();
+
+    loading.setSize(size.width, size.height);
+    loading.setFont(new Font("Arial", Font.PLAIN, size.height / 15));
+    loading.setForeground(new Color(200, 50, 200));
+    loading.setLocation(0, 0);
+
+    add(loading);
 
     MainPane main = new MainPane(this, size);
 
@@ -662,7 +685,7 @@ class MainPane extends JLayeredPane{
     }
     else{
 
-     JLabel refused = new JLabel("Не установлено соединение с сервером");
+     JLabel refused = new JLabel("No connection to server");
      refused.setFont(new Font("Arial", Font.BOLD, size.height / 50));
      refused.setForeground(Color.RED);
      refused.setLocation(size.width / 5, size.height * 3 / 8 + size.height / 40);
@@ -701,6 +724,8 @@ class ServerConnectionThread extends Thread{
 
 		try{
 
+			wind.loading.setText("Waiting for players...");
+
 			GameServerConnection gsc = new GameServerConnection("25.68.140.53", port);
 			gsc.enterServer(username);
 			gsc.downloadMap();
@@ -708,6 +733,8 @@ class ServerConnectionThread extends Thread{
 			this.dos = gsc.dos;
 
 			new ResponseThread(this).start();
+
+			wind.loading.setVisible(false);
 
 			wind.screen = new Screen(gsc , wind.size, this);
 
@@ -825,7 +852,7 @@ class Textures{
 		this.kWidth = kWidth;
 		this.kHeight = kHeight;
 
-		BufferedImage buffIn = ImageIO.read(new File("D:/shooter 0.3.x/textures/error.png"));
+		BufferedImage buffIn = ImageIO.read(new File("D:/github/shooterFF/textures/error.png"));
 			Image in = buffIn.getScaledInstance((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), Image.SCALE_REPLICATE);
 			error = new BufferedImage((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), BufferedImage.TYPE_INT_ARGB);
 

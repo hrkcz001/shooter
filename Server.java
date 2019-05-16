@@ -250,8 +250,8 @@ class Game extends Thread {
 		//cameras.get(0).addPlayer(1);
 		//gamers.get(0).pos = new DoublePosition(10,10);
 		//cameras.get(0).addPlayer(1);
-		bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
-		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");
+		/*bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
+		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");*/
 		//in the end
 		start();
 	}
@@ -418,7 +418,8 @@ class Bullet {
 	int damage;
 	ArrayList <Gamer> gamers;
 	ArrayList <Barrier> barriers;
-	public Bullet (double vx,double vy,int radius,int damage,DoublePosition p,ArrayList<Gamer> gamers, String team, ArrayList<Barrier>barriers) {
+	double angle = 0;
+	public Bullet (double vx,double vy,int radius,int damage,DoublePosition p,ArrayList<Gamer> gamers, String team, ArrayList<Barrier>barriers, double angle) {
 		this.vx = vx;
 		this.vy = vy;
 		this.p = p;
@@ -427,6 +428,7 @@ class Bullet {
 		this.damage = damage;
 		this.barriers = barriers;
 		this.radius = 27;
+		this.angle = angle;
 	}
 	public boolean update () {
 		moove();
@@ -453,8 +455,10 @@ class Bullet {
 			double s = (p.x - gamers.get(i).pos.x)*(p.x - gamers.get(i).pos.x) + (p.y - gamers.get(i).pos.y)*(p.y - gamers.get(i).pos.y);
       s = Math.sqrt(s);
       if (s < radius) System.out.println(this.team + "<-bullet team | gamers team->" + gamers.get(i).team);
-      if ((gamers.get(i).status)&&(gamers.get(i).team != team)&&(s<=radius))
+      if ((gamers.get(i).status)&&(gamers.get(i).team != team)&&(s<=radius)) {
+			 gamers.get(i).rotation = -1*angle + Math.PI/2 + Math.PI;
 			 return gamers.get(i);
+		 }
 		}
 		return null;
 	}
@@ -503,11 +507,11 @@ class BulletThread extends Thread{
 		}
 			return false;
 	}
-	public void addDefaultBullet (double vx, double vy,DoublePosition p,String team) {
-		addBullet(vx,vy,defRadius,defDamage,p,gamers,team,barriers);
+	public void addDefaultBullet (double vx, double vy,DoublePosition p,String team,double angle) {
+		addBullet(vx,vy,defRadius,defDamage,p,gamers,team,barriers,angle);
 	}
-	public void addBullet(double vx,double vy,int radius,int damage,DoublePosition p,ArrayList<Gamer> gamers, String team, ArrayList<Barrier>barriers){
-		bullets.add(new Bullet(vx,vy,radius,damage,p,gamers,team,barriers));
+	public void addBullet(double vx,double vy,int radius,int damage,DoublePosition p,ArrayList<Gamer> gamers, String team, ArrayList<Barrier>barriers,double angle){
+		bullets.add(new Bullet(vx,vy,radius,damage,p,gamers,team,barriers,angle));
 	}
 }
 
@@ -684,7 +688,7 @@ class Updater extends Thread{
 				g.dt = weapons.get(g.weaponId).dt;
 				angle = Math.PI/2 - g.rotation;
         angle = weapons.get(g.weaponId).getScatteredAngle(angle);
-				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 27*Math.cos(angle), g.pos.y + 27*Math.sin(angle)),g.team);
+				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 27*Math.cos(angle), g.pos.y + 27*Math.sin(angle)),g.team,angle);
 			}
     }
 		}
