@@ -140,7 +140,7 @@ class Screen extends JComponent{
 		kHeight = size.height / 900.0;
 		textures = new Textures(kWidth, kHeight);
 		myPosBoolean = false;
-		textures.load("textures.txt");
+		textures.load("D:/github/shooterFF/textures.txt");
 		sct.startedScreen = true;
 
 		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
@@ -789,7 +789,7 @@ class Textures{
 		this.kWidth = kWidth;
 		this.kHeight = kHeight;
 
-		BufferedImage buffIn = ImageIO.read(new File("/home/hrkcz/github/shooter/textures/error.png"));
+		BufferedImage buffIn = ImageIO.read(new File("D:/github/shooterFF/textures/error.png"));
 			Image in = buffIn.getScaledInstance((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), Image.SCALE_REPLICATE);
 			error = new BufferedImage((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), BufferedImage.TYPE_INT_ARGB);
 

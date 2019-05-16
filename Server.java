@@ -258,7 +258,7 @@ class Game extends Thread {
 	}
 	public void createWeapons () {
 		weapons = new ArrayList<Weapon>();
-		weapons.add(new Weapon("gun",1,100,20));
+		weapons.add(new Weapon("gun",1,500,20));
 	}
 	public void sendTestString(){
 		String s;
@@ -311,7 +311,7 @@ class Game extends Thread {
 	}
 	public void generatePlayersPositions() {
 		for (int i = 0;i<gamers.size(); i++) {
-			Position p = randomPosition(0,1600,0,900,10);
+			Position p = randomPosition(25,1575,2,875,10);
 			gamers.get(i).setDefaultPosition(p);
 		}
 	}
@@ -375,7 +375,7 @@ class Gamer {
 		this.team = team;
 		this.nickname = clientThread.clientNickname;
 		health = 100;
-		v = 1;
+		v = 1.5;
 		rotation = 0;
 		dt = 0;
 		weaponId = 0;
@@ -386,7 +386,6 @@ class Gamer {
 	}
 	public void damage (int d) {
 		health -= d;
-		System.out.println(d);
 		if (health <= 0) status = false;
 	}
 	public synchronized void sendString (String s) {
@@ -401,7 +400,7 @@ class Gamer {
 		if (pos.x + vx > 0) return true;
 		if (pos.x + vx < 1600) return true;
 		if (pos.y + vy > 0) return true;
-		if (pos.y + vy < 1600) return  true;
+		if (pos.y + vy < 900) return  true;
 
 		return false;
 	}
@@ -424,7 +423,7 @@ class Bullet {
 		this.team = team;
 		this.damage = damage;
 		this.barriers = barriers;
-		radius = 1;
+		this.radius = 27;
 	}
 	public boolean update () {
 		moove();
@@ -433,6 +432,7 @@ class Bullet {
 	public boolean makeDamage (Gamer g) {
 		if (g==null) return false;
 		//нанесение дамага
+    System.out.println("damage");
 		g.damage(damage);
 		stop();
 		return true;
@@ -447,8 +447,10 @@ class Bullet {
 	}
 	public Gamer checkCollision () {
 		for (int i = 0;i<gamers.size();i++) {
-			double s = Math.pow((gamers.get(i).pos.x - p.x),2) + Math.pow((gamers.get(i).pos.y - p.y),2);
-			if ((gamers.get(i).team == team)&&(Math.sqrt(s)<=radius))
+			double s = (p.x - gamers.get(i).pos.x)*(p.x - gamers.get(i).pos.x) + (p.y - gamers.get(i).pos.y)*(p.y - gamers.get(i).pos.y);
+      s = Math.sqrt(s);
+      if (s < radius) System.out.println(this.team + "<-bullet team | gamers team->" + gamers.get(i).team);
+      if ((gamers.get(i).status)&&(gamers.get(i).team != team)&&(s<=radius))
 			 return gamers.get(i);
 		}
 		return null;
@@ -563,7 +565,7 @@ class Camera extends Thread{
 		DoublePosition p;
 		for (int i = 0;i<bullets.size();i++) {
 			p = bullets.get(i).p;
-			if (inCameraArea(p)) s+= decimalFormat.format(p.x - xFrom) + "/" + decimalFormat.format(p.y - yFrom) + ":";
+			if (inCameraArea(p)) s+= decimalFormat.format(p.x - xFrom) + "/" + decimalFormat.format(p.y - yFrom) + "/"+ bullets.get(i).team +":";
 		}
 		return s;
 	}
@@ -669,6 +671,7 @@ class Updater extends Thread{
 			double angle = 0;
 		for (int i = 0;i<gamers.size();i++){
 			g = gamers.get(i);
+      if (g.status) {
 			String[] splitedData = g.clientThread.readString().split("/");
 			g.updatePosition(splitedData[0], splitedData[1]);
 			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
@@ -677,8 +680,9 @@ class Updater extends Thread{
 				//System.out.println("+Bullet");
 				g.dt = weapons.get(g.weaponId).dt;
 				angle = Math.PI/2 - g.rotation;
-				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 25*Math.cos(angle), g.pos.y + 25*Math.sin(angle)),g.team);
+				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 27*Math.cos(angle), g.pos.y + 27*Math.sin(angle)),g.team);
 			}
+    }
 		}
 	}
 	catch (Exception e) {

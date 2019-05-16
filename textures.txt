@@ -1,2 +1,2 @@
-dead_blue&D:/github/shooterM/textures/dead_1.png
-dead_red&D:/github/shooterM/textures/dead_0.png
+dead_blue&D:/github/shooterFF/textures/dead_1.png
+dead_red&D:/github/shooterFF/textures/dead_0.png
