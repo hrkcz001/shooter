@@ -3,7 +3,6 @@ import java.io.*;
 import java.util.*;
 import java.text.DecimalFormat;
 
-
 class Server {
 	public static void main(String[]args){
 		new ServerInfo("D:/github/shooterFF/serverinfo.txt");
@@ -258,7 +257,7 @@ class Game extends Thread {
 	}
 	public void createWeapons () {
 		weapons = new ArrayList<Weapon>();
-		weapons.add(new Weapon("gun",1,500,20));
+		weapons.add(new Weapon("gun",1,500,20,0.0872665));
 	}
 	public void sendTestString(){
 		String s;
@@ -311,7 +310,7 @@ class Game extends Thread {
 	}
 	public void generatePlayersPositions() {
 		for (int i = 0;i<gamers.size(); i++) {
-			Position p = randomPosition(25,1575,2,875,10);
+			Position p = randomPosition(25,1575,25,875,10);
 			gamers.get(i).setDefaultPosition(p);
 		}
 	}
@@ -322,6 +321,9 @@ class Game extends Thread {
 		 for (int i = 0;i<cameras.size();i++)
 		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
 				s = cameras.get(i).forGamer + "&" + Integer.toString(j) + "&" + cameras.get(i).cameraInfString;
+        s += "/" + (gamers.get(cameras.get(i).gamersId.get(j)).repaint ? 1 : 0);
+        //System.out.println(gamers.get(cameras.get(i).gamersId.get(j)).repaint);
+        if (gamers.get(cameras.get(i).gamersId.get(j)).repaint) gamers.get(cameras.get(i).gamersId.get(j)).repaint = false;
 				gamers.get(cameras.get(i).gamersId.get(j)).sendString(s);
 				//System.out.println(Integer.parseInt(s.split("&")[2]) + " " + i);
 
@@ -370,6 +372,7 @@ class Gamer {
 	int dt;
 	int weaponId;
 	boolean status = true;
+  boolean repaint = true;
 	public Gamer (GameClientThread gct, String team) {
 		this.clientThread = gct;
 		this.team = team;
@@ -550,7 +553,7 @@ class Camera extends Thread{
 		decimalFormat = new DecimalFormat("#.00");
 		forGamer = "";
 		System.out.println("Camera created");
-		cameraInfString = x + "/" + y + "/" + (x + sizeX) + "/" + (y + sizeY);
+		cameraInfString = x/10 + "/" + y/10 + "/" + (x + sizeX)/10 + "/" + (y + sizeY)/10;
 		start();
 	}
 	public void addPlayer(int i) {
@@ -680,6 +683,7 @@ class Updater extends Thread{
 				//System.out.println("+Bullet");
 				g.dt = weapons.get(g.weaponId).dt;
 				angle = Math.PI/2 - g.rotation;
+        angle = weapons.get(g.weaponId).getScatteredAngle(angle);
 				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 27*Math.cos(angle), g.pos.y + 27*Math.sin(angle)),g.team);
 			}
     }
@@ -696,12 +700,17 @@ class Weapon {
 	String name;
 	int dt;
 	int damage;
-	public Weapon (String name,int radius, int dt, int damage) {
+  double delta;
+	public Weapon (String name,int radius, int dt, int damage,double delta) {
 		this.radius = radius;
 		this.dt = dt;
 		this.damage = damage;
 		this.name = name;
+    this.delta = delta;
 	}
+  public double getScatteredAngle (double angle) {
+    return  ((Math.random()*2 - 1) * delta + angle);
+  }
 }
 
 class GamerUpdater extends Thread {

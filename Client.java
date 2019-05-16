@@ -121,6 +121,7 @@ class Screen extends JComponent{
 	Boolean myPosBoolean = false;
 	int myNum;
 	Textures textures;
+	BufferedImage ground;
 
 
   DecimalFormat df = new DecimalFormat("#.00");
@@ -140,7 +141,7 @@ class Screen extends JComponent{
 		kHeight = size.height / 900.0;
 		textures = new Textures(kWidth, kHeight);
 		myPosBoolean = false;
-		textures.load("D:/github/shooterFF/textures.txt");
+		textures.load("D:/shooter 0.3.x/textures.txt");
 		sct.startedScreen = true;
 
 		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
@@ -173,8 +174,42 @@ class Screen extends JComponent{
 
 			if(!dataForPaint.isEmpty()){
 
-
 				String[] splitedData = dataForPaint.split("&");
+
+				if(!splitedData[3].isEmpty()){
+
+					if(ground != null){
+
+						g.drawImage(ground, 0, 0, null);
+
+					}
+
+				if((splitedData[3].split("/")[4].equals("1")) || (ground == null)){
+
+					ground = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_RGB);
+
+					Graphics2D g2d = ground.createGraphics();
+
+					for(int i = Integer.parseInt(splitedData[3].split("/")[0]); i < Integer.parseInt(splitedData[3].split("/")[2]) - 1; i++)
+						for(int j = Integer.parseInt(splitedData[3].split("/")[1]); j < Integer.parseInt(splitedData[3].split("/")[3]) - 1; j++){
+
+							switch(map[i][j]){
+
+								case 'f': g2d.setPaint(new Color(100, 200, 100)); break;
+
+								case 'b': g2d.setPaint(new Color(254, 127, 0)); break;
+
+							}
+
+						g2d.fillRect(i*10, j*10, 10, 10);
+
+					}
+
+					g2d.dispose();
+
+				}
+
+				}					
 
 				if(!splitedData[0].isEmpty()){
 
@@ -309,6 +344,7 @@ class Wind extends JFrame{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setUndecorated(true);
     setResizable(false);
+    getContentPane().setBackground(new Color(100, 200, 100));
 
     MainPane main = new MainPane(this, size);
 
@@ -789,7 +825,7 @@ class Textures{
 		this.kWidth = kWidth;
 		this.kHeight = kHeight;
 
-		BufferedImage buffIn = ImageIO.read(new File("D:/github/shooterFF/textures/error.png"));
+		BufferedImage buffIn = ImageIO.read(new File("D:/shooter 0.3.x/textures/error.png"));
 			Image in = buffIn.getScaledInstance((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), Image.SCALE_REPLICATE);
 			error = new BufferedImage((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), BufferedImage.TYPE_INT_ARGB);
 
