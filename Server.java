@@ -389,7 +389,11 @@ class Gamer {
 	}
 	public void damage (int d) {
 		health -= d;
-		if (health <= 0) status = false;
+		if (health <= 0)
+		{
+			status = false;
+			health = 0;
+		}
 	}
 	public synchronized void sendString (String s) {
 		clientThread.sendString(s);
@@ -437,10 +441,13 @@ class Bullet {
 	public boolean makeDamage (Gamer g) {
 		if (g==null) return false;
 		//нанесение дамага
-    System.out.println("damage");
-		g.damage(damage);
+    //System.out.println("damage");
+		g.damage((int)(getRandomDamage(damage)));
 		stop();
 		return true;
+	}
+	public double getRandomDamage (int damage) {
+		return  ((Math.random()*2 - 1) * 10 + damage);
 	}
 	public void moove () {
 		p.x += vx;
@@ -476,7 +483,7 @@ class BulletThread extends Thread{
 	ArrayList <Barrier> barriers;
 	ArrayList <Bullet> bullets;
 	int defRadius = 26;
-	int defDamage = 10;
+	int defDamage = 20;
 	public BulletThread (ArrayList <Gamer> gamers, ArrayList <Barrier> barriers) {
 		this.gamers = gamers;
 		this.barriers = barriers;

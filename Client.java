@@ -311,7 +311,7 @@ class Screen extends JComponent{
 
 								if(playersString[i].split("/")[4].equals("0")){
 
-									g.drawString("YOU DIED", size.width / 2 - size.width / 5, size.height / 2 - size.height / 10);
+									g.drawString("YOU DIED", size.width / 2 - size.width / 10, size.height / 2 - size.height / 20);
 
 								}
 
@@ -365,7 +365,7 @@ class Wind extends JFrame{
     loading.setSize(size.width, size.height);
     loading.setFont(new Font("Arial", Font.PLAIN, size.height / 15));
     loading.setForeground(new Color(200, 50, 200));
-    loading.setLocation(0, 0);
+    loading.setLocation(size.width / 4, 0);
 
     add(loading);
 
