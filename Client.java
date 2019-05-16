@@ -140,10 +140,10 @@ class Screen extends JComponent{
 		kHeight = size.height / 900.0;
 		textures = new Textures(kWidth, kHeight);
 		myPosBoolean = false;
-		textures.load("D:/github/shooterM/textures.txt");
+		textures.load("textures.txt");
 		sct.startedScreen = true;
 
-		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
+		javax.swing.Timer timer = new javax.swing.Timer(10, new ActionListener(){
 
 			public void actionPerformed(ActionEvent ae){
 
@@ -367,7 +367,6 @@ class Wind extends JFrame{
 					if(me.getButton() == MouseEvent.BUTTON3){
 
 						main.sct.rightMouse = true;
-						System.out.println("Right Pressed");
 
 					}
 
@@ -389,7 +388,6 @@ class Wind extends JFrame{
 					if(me.getButton() == MouseEvent.BUTTON3){
 
 						main.sct.rightMouse = false;
-						System.out.println("Right Released");
 
 					}
 
@@ -758,7 +756,7 @@ class ResponseThread extends Thread{
 
 				float rotation = 0.0f;
 
-				if((sct.wind.screen != null)){
+				if(sct.wind.screen != null){
 
 					Point mouse = MouseInfo.getPointerInfo().getLocation();
 
@@ -766,9 +764,9 @@ class ResponseThread extends Thread{
 
 				}
 
-				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + df.format(rotation) + "/" + m1);}
+				if(sct.wind.screen != null){sct.dos.writeUTF(x + "/" + y + "/" + df.format(rotation) + "/" + m1);}
 
-				Thread.sleep(20);
+				Thread.sleep(10);
 
 			}
 
@@ -791,7 +789,7 @@ class Textures{
 		this.kWidth = kWidth;
 		this.kHeight = kHeight;
 
-		BufferedImage buffIn = ImageIO.read(new File("D:/github/shooterM/textures/error.png"));
+		BufferedImage buffIn = ImageIO.read(new File("/home/hrkcz/github/shooter/textures/error.png"));
 			Image in = buffIn.getScaledInstance((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), Image.SCALE_REPLICATE);
 			error = new BufferedImage((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), BufferedImage.TYPE_INT_ARGB);
 
@@ -801,8 +799,6 @@ class Textures{
 		}catch(Exception e){
 
 			System.out.println("Can't found a ERROR sprite in Textures folder " + e);
-			/*System.out.println(kWidth + " " + kHeight);
-			e.printStackTrace();*/
 
 		}
 

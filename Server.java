@@ -64,6 +64,7 @@ class GameClientThread extends Thread {
 	Socket clientSocket;
 	ClientReader cr;
 	int i;
+	double d;
 	public GameClientThread (Socket clientSocket, int i) {
 		try {
 			dis = new DataInputStream(clientSocket.getInputStream());
@@ -82,17 +83,15 @@ class GameClientThread extends Thread {
 		System.out.println("GameClientThread started");
 		clientNickname = readClientNickname();
 		String s = "";
-	while (cr == null) {System.out.print(" ");}
+	while (cr == null) {
+			System.out.print(" ");
+		}
 		while (cr!=null) {
 				s = readString();
-				//System.out.println(s + "0");
 				if (s!=null)
 				{
-					//System.out.println(s + "1");
 					cr.insertData(i,s);
-					//System.out.println(s + "2");
 				}
-			//else System.out.println("pidar");
 		}
 	}
 	public String readClientNickname () {
@@ -710,6 +709,7 @@ class MainThread extends Thread{
 		double dt = System.currentTimeMillis() - before;
 		dt = dt/10;
 		before = System.currentTimeMillis();
+		//System.out.println(dt*10);
 		//System.out.println(before);
 		moovePlayers(dt);
 		mooveBullets(dt);
@@ -815,7 +815,7 @@ class ClientWriter extends Thread{
 			 while (true) {
 			 sendData();
 			 //System.out.println("cw update");
-			 sleep(20);
+			 sleep(10);
 		 }
 	 } catch(Exception e) {
 		 e.printStackTrace();
