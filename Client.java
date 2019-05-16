@@ -1,7 +1,9 @@
 import java.util.*;
 import java.io.*;
+import javax.imageio.*;
 import java.net.*;
 import java.awt.*;
+import java.awt.image.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
@@ -118,6 +120,8 @@ class Screen extends JComponent{
 	Point myPos = new Point(0, 0);
 	Boolean myPosBoolean = false;
 	int myNum;
+	Textures textures;
+
 
   DecimalFormat df = new DecimalFormat("#.00");
 
@@ -134,7 +138,9 @@ class Screen extends JComponent{
 		this.size = size;
 		kWidth = size.width / 1600.0;
 		kHeight = size.height / 900.0;
+		textures = new Textures(kWidth, kHeight);
 		myPosBoolean = false;
+		textures.load("D:/github/shooterM/textures.txt");
 		sct.startedScreen = true;
 
 		javax.swing.Timer timer = new javax.swing.Timer(2, new ActionListener(){
@@ -164,7 +170,6 @@ class Screen extends JComponent{
 			g.fillRect(0, 0, size.width, size.height);
 
 			String dataForPaint = dis.readUTF();
-			System.out.println(dataForPaint);
 
 			if(!dataForPaint.isEmpty()){
 
@@ -205,20 +210,18 @@ class Screen extends JComponent{
 
 					for(int i = 0; i < playersString.length; i++){
 
+						String plTeam = "red";
+
 						if(playersString[i].split("/")[3].equals(myTeam)){
 
 							g.setPaint(Color.BLUE);
+							plTeam = "blue";
 
 						}
 						else{
 
 							g.setPaint(Color.RED);
-
-						}
-
-						if(playersString[i].split("/")[4].equals("0")){
-
-							g.setPaint(Color.BLACK);
+							plTeam = "red";
 
 						}
 
@@ -232,22 +235,39 @@ class Screen extends JComponent{
 
 						}
 
-						int rotationX = (int)(playerX + 25 * kWidth * Math.cos(angle));
-						int rotationY = (int)(playerY + 25 * kHeight * Math.sin(angle));
+						if(playersString[i].split("/")[4].equals("1")){
 
-						g.fillOval((int)(playerX - 25 * kWidth), (int)(playerY - 25 * kHeight), (int)(50 * kWidth), (int)(50 * kHeight));
+							int rotationX = (int)(playerX + 25 * kWidth * Math.cos(angle));
+							int rotationY = (int)(playerY + 25 * kHeight * Math.sin(angle));
 
-						/*if(i == myNum){
+							g.fillOval((int)(playerX - 25 * kWidth), (int)(playerY - 25 * kHeight), (int)(50 * kWidth), (int)(50 * kHeight));
 
-							g.setPaint(Color.GREEN);
+							g.setColor(Color.WHITE);
+							g.drawLine(playerX, playerY, rotationX, rotationY);
+
+							if(i == myNum){
+
+								g.setPaint(Color.WHITE);
+
+							}
+							else{
+
+								g.setColor(Color.BLACK);
+
+							}
+
+							g.fillOval((int)(playerX - 12 * kWidth), (int)(playerY - 12 * kHeight), (int)(25 * kWidth), (int)(25 * kHeight));
+
+							g.setPaint(Color.BLUE);
 
 						}
+						else{
 
-						g.fillOval()*/
+							BufferedImage dead = textures.find("dead_" + plTeam);
+							dead = textures.rotate(dead, - Math.PI / 2 + angle);
+							g.drawImage(dead, playerX - dead.getWidth() / 2, playerY - dead.getHeight() / 2, null);
 
-						g.setColor(Color.WHITE);
-						g.drawLine(playerX, playerY, rotationX, rotationY);
-						g.setPaint(Color.BLUE);
+						}
 
 					}
 
@@ -340,7 +360,6 @@ class Wind extends JFrame{
 				if(me.getButton() == MouseEvent.BUTTON1){
 
 					main.sct.leftMouse = true;
-					System.out.println("Left Pressed");
 
 				}
 				else{
@@ -363,7 +382,6 @@ class Wind extends JFrame{
 				if(me.getButton() == MouseEvent.BUTTON1){
 
 					main.sct.leftMouse = false;
-					System.out.println("Left Released");
 
 				}
 				else{
@@ -740,7 +758,7 @@ class ResponseThread extends Thread{
 
 				float rotation = 0.0f;
 
-				if((sct.startedScreen)){
+				if((sct.wind.screen != null)){
 
 					Point mouse = MouseInfo.getPointerInfo().getLocation();
 
@@ -750,11 +768,129 @@ class ResponseThread extends Thread{
 
 				if(sct.startedScreen){sct.dos.writeUTF(x + "/" + y + "/" + df.format(rotation) + "/" + m1);}
 
-				Thread.sleep(10);
+				Thread.sleep(20);
 
 			}
 
 		}catch(Exception e){e.printStackTrace();}
+
+	}
+
+}
+
+class Textures{
+
+	Map<String, BufferedImage> list = new HashMap<String, BufferedImage>();
+	Boolean loadingTextures = false, needToLoad = false;
+	double kWidth, kHeight;
+	BufferedImage error;
+
+	public Textures(double kWidth, double kHeight){
+		try{
+
+		this.kWidth = kWidth;
+		this.kHeight = kHeight;
+
+		BufferedImage buffIn = ImageIO.read(new File("D:/github/shooterM/textures/error.png"));
+			Image in = buffIn.getScaledInstance((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), Image.SCALE_REPLICATE);
+			error = new BufferedImage((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), BufferedImage.TYPE_INT_ARGB);
+
+			Graphics2D g2d = error.createGraphics();
+			g2d.drawImage(in, 0, 0, null);
+			g2d.dispose();
+		}catch(Exception e){
+
+			System.out.println("Can't found a ERROR sprite in Textures folder " + e);
+			/*System.out.println(kWidth + " " + kHeight);
+			e.printStackTrace();*/
+
+		}
+
+	}
+
+	public void load(String path){
+
+		loadingTextures = true;
+		try{
+
+			Scanner sc = new Scanner(new File(path));
+
+			String[] imageData = new String[2];
+
+			while(sc.hasNextLine()){
+
+				try{
+
+					imageData = sc.nextLine().split("&");
+
+					BufferedImage buffIn = ImageIO.read(new File(imageData[1]));
+					Image in = buffIn.getScaledInstance((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), Image.SCALE_REPLICATE);
+					BufferedImage image = new BufferedImage((int)(buffIn.getWidth() * kWidth), (int)(buffIn.getHeight() * kHeight), BufferedImage.TYPE_INT_ARGB);
+
+					Graphics2D g2d = image.createGraphics();
+					g2d.drawImage(in, 0, 0, null);
+					g2d.dispose();
+
+					list.put(imageData[0], image);
+
+				}catch(Exception e){
+
+					System.out.println("Can't found a/an " + imageData[1] + " sprite in Textures folder " + e);
+
+				}
+
+			}
+
+		}catch(Exception e){
+
+			System.out.println(e);
+
+		}
+
+	}
+
+	public BufferedImage find(String name){
+
+		BufferedImage answ = list.get(name);
+
+		if(answ == null){
+
+			return error;
+
+		}
+		else{
+
+			return answ;
+
+		}
+
+	}
+
+	public static BufferedImage rotate(BufferedImage image, double angle) {
+
+    		double sin = Math.abs(Math.sin(angle)), cos = Math.abs(Math.cos(angle));
+    		int w = image.getWidth(), h = image.getHeight();
+    		int neww = (int)Math.floor(w*cos+h*sin), newh = (int) Math.floor(h * cos + w * sin);
+
+    		GraphicsConfiguration gc = getDefaultConfiguration();
+    		BufferedImage result = gc.createCompatibleImage(neww, newh, Transparency.TRANSLUCENT);
+    		Graphics2D g = result.createGraphics();
+
+    		g.translate((neww - w) / 2, (newh - h) / 2);
+    		g.rotate(angle, w / 2, h / 2);
+    		g.drawRenderedImage(image, null);
+    		g.dispose();
+
+    		return result;
+
+		}
+
+	private static GraphicsConfiguration getDefaultConfiguration() {
+
+    		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+    		GraphicsDevice gd = ge.getDefaultScreenDevice();
+
+    		return gd.getDefaultConfiguration();
 
 	}
 

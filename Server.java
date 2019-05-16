@@ -2,6 +2,9 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 class Server {
@@ -35,10 +38,12 @@ class VirtualServer extends Thread{
 	}
 	public void run () {
 		System.out.println(port);
+		int i = 0;
 		try {
 		while (clients.size() < Integer.parseInt(ServerInfo.getData(2)))
 		{
-		 clients.add(new GameClientThread (ss.accept()));
+		 clients.add(new GameClientThread (ss.accept(),i));
+		 i++;
 		 status = "waiting for players, " + clients.size() + " of " + ServerInfo.getData(2);
 	 }
 		 g = new Game(clients);
@@ -57,12 +62,16 @@ class GameClientThread extends Thread {
 	OutputStream os;
 	String clientNickname;
 	Socket clientSocket;
-	public GameClientThread (Socket clientSocket) {
+	ClientReader cr;
+	int i;
+	public GameClientThread (Socket clientSocket, int i) {
 		try {
 			dis = new DataInputStream(clientSocket.getInputStream());
 			dos = new DataOutputStream(clientSocket.getOutputStream());
 			os = clientSocket.getOutputStream();
 			this.clientSocket = clientSocket;
+			this.i = i;
+			cr = null;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -72,6 +81,19 @@ class GameClientThread extends Thread {
 	public void run () {
 		System.out.println("GameClientThread started");
 		clientNickname = readClientNickname();
+		String s = "";
+	while (cr == null) {System.out.print(" ");}
+		while (cr!=null) {
+				s = readString();
+				//System.out.println(s + "0");
+				if (s!=null)
+				{
+					//System.out.println(s + "1");
+					cr.insertData(i,s);
+					//System.out.println(s + "2");
+				}
+			//else System.out.println("pidar");
+		}
 	}
 	public String readClientNickname () {
 		try {
@@ -148,6 +170,7 @@ class ConnectThread extends Thread{
 		}
 
 	}
+
 }
 
 class MainServer {
@@ -172,13 +195,14 @@ class MainServer {
 	}
 }
 
-class Game extends Thread {
+class Game {
 	ArrayList <GameClientThread> clients;
 	ArrayList <Gamer> gamers;
 	ArrayList <Barrier> barriers;
 	ArrayList <Camera> cameras;
 	ArrayList <Weapon> weapons;
 	BulletThread bt;
+	MainThread mt;
 	String[]map;
 	public Game (ArrayList <GameClientThread> clients) {
 		this.clients = clients;
@@ -241,24 +265,26 @@ class Game extends Thread {
 		generatePlayersPositions();
 		sendMapToAll();
 		sendTestString();
-		bt = new BulletThread(gamers, barriers);
+
 
 		barriers = new ArrayList <Barrier>();
 		cameras = new ArrayList<Camera>();
+		/*bt = new BulletThread();
 		cameras.add(new Camera(0,0,1600,900,bt,gamers));
 		for (int i = 0;i<gamers.size();i++)
-		 cameras.get(0).addPlayer(i);
+		 cameras.get(0).addPlayer(i);*/
 		//cameras.get(0).addPlayer(1);
 		//gamers.get(0).pos = new DoublePosition(10,10);
 		//cameras.get(0).addPlayer(1);
-		bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
-		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");
+		/*bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
+		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");*/
 		//in the end
-		start();
+		mt = new MainThread (gamers, barriers, weapons);
+		new ClientWriter(clients,mt.output);
 	}
 	public void createWeapons () {
 		weapons = new ArrayList<Weapon>();
-		weapons.add(new Weapon("gun",1,100,20));
+		weapons.add(new Weapon("gun",1,10,20));
 	}
 	public void sendTestString(){
 		String s;
@@ -315,36 +341,6 @@ class Game extends Thread {
 			gamers.get(i).setDefaultPosition(p);
 		}
 	}
-	public void cameraUpdate () {
-		 //System.out.println(cameras.get(0).forGamer);
-		 String s = "";
-		 //проход по камерам, отправка пользователям координат
-		 for (int i = 0;i<cameras.size();i++)
-		 	for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
-				s = cameras.get(i).forGamer + "&" + Integer.toString(j) + "&" + cameras.get(i).cameraInfString;
-				gamers.get(cameras.get(i).gamersId.get(j)).sendString(s);
-				//System.out.println(Integer.parseInt(s.split("&")[2]) + " " + i);
-
-			}
-			//System.out.println(s);
-	}
-	public void run () {
-		new Updater(gamers, bt, weapons).start();
-		try {
-			while (true) {
-				cameraUpdate();
-				gamersDtUpdate();
-				sleep(6);
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	public void gamersDtUpdate() {
-		for (int i = 0;i<gamers.size();i++)
-		  if (gamers.get(i).dt > 0) gamers.get(i).dt -= 10;
-	}
 }
 
 class Position {
@@ -367,7 +363,7 @@ class Gamer {
 	int health;
 	double v;
 	double rotation;
-	int dt;
+	double dt;
 	int weaponId;
 	boolean status = true;
 	public Gamer (GameClientThread gct, String team) {
@@ -392,9 +388,9 @@ class Gamer {
 	public synchronized void sendString (String s) {
 		clientThread.sendString(s);
 	}
-	public void updatePosition (String a, String b) {
-		double vx = Integer.parseInt(a)*v;
-		double vy = Integer.parseInt(b)*v;
+	public void updatePosition (String a, String b,double dt) {
+		double vx = Integer.parseInt(a)*v*dt;
+		double vy = Integer.parseInt(b)*v*dt;
 		if (allowablePosition(vx,vy)) pos = new DoublePosition(pos.x + vx, pos.y + vy);
 	}
 	public boolean allowablePosition (double vx, double vy) {
@@ -426,8 +422,8 @@ class Bullet {
 		this.barriers = barriers;
 		radius = 1;
 	}
-	public boolean update () {
-		moove();
+	public boolean update (double dt) {
+		moove(dt);
 		return makeDamage(checkCollision());
 	}
 	public boolean makeDamage (Gamer g) {
@@ -437,9 +433,10 @@ class Bullet {
 		stop();
 		return true;
 	}
-	public void moove () {
-		p.x += vx;
-		p.y += vy;
+	public void moove (double dt) {
+		p.x += vx*dt;
+		p.y += vy*dt;
+		//System.out.println(Double.toString(p.x) + " " +Double.toString(p.y));
 	}
 	public void stop () {
 		vx = 0;
@@ -462,7 +459,7 @@ class Bullet {
 	}
 }
 
-class BulletThread extends Thread{
+class BulletThread{
 	ArrayList <Gamer> gamers;
 	ArrayList <Barrier> barriers;
 	ArrayList <Bullet> bullets;
@@ -473,22 +470,10 @@ class BulletThread extends Thread{
 		this.barriers = barriers;
 		bullets = new ArrayList<Bullet>();
 		//addDefaultBullet(10,10,new Position(10,10),"red");
-		start();
 	}
-	public void run () {
-		try {
-			while (true) {
-				update();
-				sleep(10);
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	public void update () {
+	public void update (double dt) {
 		for (int i = 0;i<bullets.size();i++) {
-			if ((bullets.get(i).update())||(bullets.get(i).outOfZone())) bullets.remove(i);
+			if ((bullets.get(i).update(dt))||(bullets.get(i).outOfZone())) bullets.remove(i);
 			else if (checkBarrierCollision(bullets.get(i))) bullets.remove(i);
 		}
 	}
@@ -526,7 +511,7 @@ class Barrier {
 	}
 }
 
-class Camera extends Thread{
+class Camera{
 	ArrayList<Integer> gamersId;
 	ArrayList<Gamer> gamers;
 	ArrayList<Bullet> bullets;
@@ -549,7 +534,6 @@ class Camera extends Thread{
 		forGamer = "";
 		System.out.println("Camera created");
 		cameraInfString = x + "/" + y + "/" + (x + sizeX) + "/" + (y + sizeY);
-		start();
 	}
 	public void addPlayer(int i) {
 		gamersId.add(i);
@@ -586,17 +570,6 @@ class Camera extends Thread{
 	}
 	public String getForGamer() {
 		return (bulletsToString() + "&" + gamersToString());
-	}
-	public void run () {
-		try {
-		while (true) {
-			forGamer = getForGamer();
-			sleep(10);
-		}
-		}
-	catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }
 
@@ -643,7 +616,7 @@ class ServerInfo {
 	}
 }
 
-class Updater extends Thread{
+class Updater{
 	ArrayList <Gamer> gamers;
 	ArrayList <Weapon> weapons;
 	BulletThread bt;
@@ -653,24 +626,16 @@ class Updater extends Thread{
 		this.bt = bt;
 		this.weapons = weapons;
 	}
-	public void run () {
-		try {
-			while (true) {
-				update();
-				sleep(2);
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-	public void update () {
+	public void update (ArrayList <String> data,double dt) {
 		try {
 			Gamer g;
 			double angle = 0;
 		for (int i = 0;i<gamers.size();i++){
 			g = gamers.get(i);
-			String[] splitedData = g.clientThread.readString().split("/");
-			g.updatePosition(splitedData[0], splitedData[1]);
+			String[] splitedData = data.get(i).split("/");
+
+			if (splitedData.length>2) {
+			g.updatePosition(splitedData[0], splitedData[1],dt);
 			g.rotation = DecimalFormat.getNumberInstance().parse(splitedData[2]).doubleValue();
 			//System.out.println(Integer.toString(i) + " " + splitedData[1] + " " + splitedData[2]);
 			if ((Integer.parseInt(splitedData[3]) == 1)&&(g.dt <= 0)&&(g.status)) {
@@ -679,6 +644,7 @@ class Updater extends Thread{
 				angle = Math.PI/2 - g.rotation;
 				bt.addDefaultBullet(defBulletV*Math.cos(angle),defBulletV*Math.sin(angle),new DoublePosition(g.pos.x + 25*Math.cos(angle), g.pos.y + 25*Math.sin(angle)),g.team);
 			}
+		 }
 		}
 	}
 	catch (Exception e) {
@@ -700,9 +666,179 @@ class Weapon {
 	}
 }
 
-class GamerUpdater extends Thread {
-	Gamer g;
-	public GamerUpdater (Gamer g) {
-		this.g = g;
+class MainThread extends Thread{
+	ArrayList <Gamer> gamers;
+	Updater updater;
+	BulletThread bt;
+	ArrayList <Barrier> barriers;
+	ArrayList <Camera> cameras;
+	ArrayList <Weapon> weapons;
+	Buffer input;
+	Buffer output;
+	long before;
+	ClientReader cr;
+	public MainThread (ArrayList <Gamer> gamers, ArrayList <Barrier> barriers, ArrayList <Weapon> weapons) {
+		this.gamers = gamers;
+		this.barriers = barriers;
+		bt = new BulletThread(gamers, barriers);
+
+		cameras = new ArrayList<Camera>();
+		cameras.add(new Camera(0,0,1600,900,bt,gamers));
+		for (int i = 0;i<gamers.size();i++)
+		 cameras.get(0).addPlayer(i);
+		updater = new Updater(gamers, bt, weapons);
+		createBuffers();
+		before = System.currentTimeMillis();
+		cr = new ClientReader(input);
+		System.out.println("ClientReader created");
+		setCR();
+		//
+		System.out.println("started");
+		//
+		bt.addDefaultBullet(1.2131231212,2.1323242433454535434663,new DoublePosition(120,101),"red");
+		bt.addDefaultBullet(1,3,new DoublePosition(10,15),"red");
+		//
+		start();
+	}
+	public void setCR () {
+		for (int i = 0;i<gamers.size();i++) {
+		  gamers.get(i).clientThread.cr = this.cr;
+			System.out.println("добавил + " + i);
+		}
+	}
+	public void serverUpdate () {
+		double dt = System.currentTimeMillis() - before;
+		dt = dt/10;
+		before = System.currentTimeMillis();
+		//System.out.println(before);
+		moovePlayers(dt);
+		mooveBullets(dt);
+		updateCameras();
+		updatePlayersDT(dt);
+	}
+	public void createBuffers () {
+		input = new Buffer();
+		output = new Buffer();
+	}
+	public void changeBuffers () {
+		input.changeBuffers();
+		//System.out.println("buffers changed");
+	}
+	public void run () {
+		before = System.currentTimeMillis();
+		while (true) {
+			serverUpdate();
+			changeBuffers();
+		}
+	}
+	public void moovePlayers (double dt) {
+		updater.update(input.getActive(),dt);
+	}
+	public void mooveBullets (double dt) {
+		bt.update(dt);
+	}
+	public void updateCameras () {
+		String s = "";
+		//проход по камерам, отправка пользователям координат
+		for (int i = 0;i<cameras.size();i++)
+		 for (int j = 0;j<cameras.get(i).gamersId.size();j++) {
+			 s = cameras.get(i).getForGamer() + "&" + Integer.toString(j) + "&" + cameras.get(i).cameraInfString;
+		output.writePassive(j,s);
+		}
+	}
+	public void updatePlayersDT(double dt) {
+		for (int i = 0;i<gamers.size();i++)
+			if (gamers.get(i).dt > 0) gamers.get(i).dt -= dt;
+	}
+}
+
+class Buffer {
+	private ArrayList <String> active;
+	private ArrayList <String> passive;
+	private ArrayList <String> t;
+	ReentrantLock locker;
+	public Buffer () {
+		active = new ArrayList<String>();
+		passive = new ArrayList<String>();
+		locker = new ReentrantLock();
+		go();
+	}
+	public void go () {
+		for (int i = 0;i<10;i++) {
+			active.add("");
+			passive.add("");
+		}
+	}
+	public void changeBuffers () {
+		locker.lock();
+		t = active;
+		active = passive;
+		passive = t;
+		locker.unlock();
+	}
+	public ArrayList<String> getActive () {
+		try {
+			if (locker.tryLock(1,TimeUnit.SECONDS)) {
+				return (active);
+			}
+			else return null;
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			locker.unlock();
+		}
+	}
+	public void writePassive (int i,String s) {
+		try {
+			if (locker.tryLock(1,TimeUnit.SECONDS)) {
+				passive.set(i,s);
+			}
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			locker.unlock();
+		}
+	}
+}
+
+class ClientWriter extends Thread{
+	ArrayList<GameClientThread> clients;
+	Buffer output;
+ public ClientWriter (ArrayList<GameClientThread> clients, Buffer output) {
+	 this.clients = clients;
+	 this.output = output;
+	 start();
+ }
+ public void run () {
+	 try {
+			 while (true) {
+			 sendData();
+			 //System.out.println("cw update");
+			 sleep(20);
+		 }
+	 } catch(Exception e) {
+		 e.printStackTrace();
+	 }
+ }
+ public void sendData () {
+	 ArrayList <String> active = output.getActive();
+	 for (int i = 0;i<clients.size();i++)
+	 	if ((active.get(i)!=null)&&(active.get(i)!="")) {
+			clients.get(i).sendString(active.get(i));
+			//System.out.println(active.get(i));
+		}
+	 //
+	 output.changeBuffers();
+ }
+}
+
+class ClientReader {
+	static Buffer input;
+	public ClientReader (Buffer input) {
+		this.input = input;
+	}
+	public synchronized void insertData (int i, String data){
+		input.writePassive(i,data);
 	}
 }
